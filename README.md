@@ -1,6 +1,6 @@
 # uNAVlib
 uNAV as in Unmanned INAV, or "u do the nav, i'm busy".\
-Fork of the now-inactive YAMSPy (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface, created by Ricardo de Azambuja) library (specifically the proxy branch), meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware (it's easy), flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
+Fork of the now-inactive [YAMSPy](https://github.com/thecognifly/YAMSPy) (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface), created by Ricardo de Azambuja library (specifically the [proxy branch](https://github.com/thecognifly/YAMSPy/tree/proxy)), meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware (it's easy), flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
 
 ## Why?
 I happened to try INAV first and liked it, Ardupilot is way more capable, but also far more complex, and does not support as many boards as INAV, which is a fork of Betaflight. Developing INAV's autonomous capabilities and MSP's functionality so it compares more to MAVLink would open up a lot of interesting options for those who use it. I forked and renamed it because i'm probably going to completely change it, hopefully for the better.
@@ -43,16 +43,16 @@ $ sudo usermod -a -G dialout $USER
 See https://codeberg.org/stronnag/msp_override \
 Allows MSP protocol to override RC channels coming from a transmitter, allowing use of both an RC transmitter and MSP control via CC.
 * Firmware must be built with  `USE_MSP_RC_OVERRIDE` (un-comment in `src/main/target/common.h` or append to `src/main/target/TARGET_NAME/target.h`).
-* Flight mode `MSP RC Override` is active
 * The override mask `msp_override_channels` is set for the channels to be overridden by entering `set msp_override_channels =  (your bitmask here, see utils)` in the CLI.
+* Flight mode `MSP RC Override` is active.
 
 ## Proxy
-This fork's starting point is the proxy branch of yamspy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use YAMSPy in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
+This fork's starting point is the [proxy branch](https://github.com/thecognifly/YAMSPy/tree/proxy) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use YAMSPy in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
 
 ```
 $ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330
 ```
-In your script using unavlib you need to set `use_tcp=True` and pass the port number as the device. Check the script [`simpleUI_tcp.py`](/examples/simpleUI_tcp.py) in the `Examples` folder.
+In your script using unavlib you need to set `use_tcp=True` and pass the port number as the device. Check the script [`simpleUI_tcp.py`](/examples/simpleUI_tcp.py) in the `examples` folder.
 
 ## Utilities
 gen_mode_config: Connects to your board and generates json file containing basic board info and mappings of your aux modes configuration for easier scripting.\
@@ -63,7 +63,7 @@ Follow standard INAV setup procedures. This project starts with INAV 7.1 as basi
 
 ## Troubleshooting
 If you can't connect (talk) to the FC:
-1. Check if you enabled MSP in the correct UART using INAV-configurator (or betaflight-configurator)
+1. Check if you enabled MSP in the correct UART using INAV-configurator
 2. Make sure you connected the cables correctly: TX => RX and RX => TX
 3. Verify the devices available using ```ls -lh /dev/serial*``` and change it in the Python script if needed.
 
@@ -73,6 +73,7 @@ If you can't connect (talk) to the FC:
 * Split up __init__.py into more manageable files
 * Write object-oriented code to simplify usage
 * Make gen_msp_codes pull latest codes from INAV source
+* Failure mode tests and failsafes
 * C++ implementation
 
 ## Acknowledgments:
