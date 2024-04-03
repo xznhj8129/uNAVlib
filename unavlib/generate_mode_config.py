@@ -1,6 +1,6 @@
 import time
-from yamspy import MSPy
-from yamspy.inav_modes import modes_id
+from unavlib import MSPy
+from unavlib.inav_modes import modes_id
 from argparse import ArgumentParser
 import json
 
