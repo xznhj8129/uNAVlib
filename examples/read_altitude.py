@@ -25,7 +25,7 @@ None of the authors, contributors, supervisors, administrators, employers, frien
 connected (or not) with this project, in any way whatsoever, can be made responsible for your use of the information (code) 
 contained or linked from here.
 """
-from yamspy import MSPy
+from unavlib import MSPy
 
 
 #

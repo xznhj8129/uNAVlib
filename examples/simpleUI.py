@@ -50,7 +50,7 @@ from collections import deque
 from itertools import cycle
 import argparse
 
-from yamspy import MSPy
+from unavlib import MSPy
 
 # Max periods for:
 CTRL_LOOP_TIME = 1/1000

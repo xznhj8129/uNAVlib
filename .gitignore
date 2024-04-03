@@ -106,3 +106,9 @@ venv.bak/
 
 # pycharm
 .idea
+
+# development specific stuff
+notes.txt
+
+# user-specific stuff
+modes.json

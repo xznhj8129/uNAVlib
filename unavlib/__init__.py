@@ -38,9 +38,9 @@ __author__ = "Ricardo de Azambuja"
 __copyright__ = "Copyright 2019, MISTLab.ca"
 __credits__ = [""]
 __license__ = "GPL"
-__version__ = "0.3.4"
-__maintainer__ = "Ricardo de Azambuja"
-__email__ = "ricardo.azambuja@gmail.com"
+__version__ = "0.1.0"
+__maintainer__ = "frogmane"
+__email__ = ""
 __status__ = "Development"
 
 import logging
@@ -62,6 +62,7 @@ from serial import SerialException
 
 from . import msp_ctrl
 from . import msp_codes
+from . import inav_modes
 
 class MSPy:
     MSPCodes = msp_codes.MSPCodes
@@ -721,7 +722,7 @@ class MSPy:
         return 1
 
 
-    def basic_info(self):
+    def basic_info(self, returninfo=False):
         """Basic info about the flight controller to distinguish between the many flavours.
         """
         msg = 'MSP_API_VERSION'
@@ -766,7 +767,10 @@ class MSPy:
                     if dataHandler['code'] == code_value:
                         msg_processed = True
 
-        print(self.CONFIG)
+        if returninfo:
+            return self.CONFIG
+        else:
+            print(self.CONFIG)
 
     def receive_msg(self, dataHandler=None, delete_buffer=False):
         with self.port_read_lock:

@@ -7,7 +7,7 @@ one port.
 It would be useful if this same script could have the option to log all the communication
 for debugging showing which app sent/received.
 
-$ python -m yamspy.msp_proxy --ports 54310 54320
+$ python -m unavlib.msp_proxy --ports 54310 54320
 """
 
 from curses import raw

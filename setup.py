@@ -1,25 +1,25 @@
 import sys
 from setuptools import setup, find_packages
-from yamspy import __version__
+from unavlib import __version__
 
-if sys.version_info < (3, 7):
-    sys.exit('Sorry, Python < 3.7 is not supported.')
+if sys.version_info < (3, 10):
+    sys.exit('Sorry, Python < 3.10 is not supported.')
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
     
 setup(
-    name="yamspy",
+    name="unavlib",
     packages=[package for package in find_packages()],
     version=__version__,
     license="GPL",
-    description="Yet Another Implementation of Multiwii Serial Protocol Python Interface for Betaflight, iNAV, etc.",
+    description="MultiWii Serial Protocol 2 autonomous flight development library for INAV",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Ricardo de Azambuja",
-    author_email="ricardo.azambuja@gmail.com",
-    url="https://github.com/thecognifly/YAMSPy",
-    download_url="https://github.com/thecognifly/YAMSPy/archive/refs/tags/v0.3.3.tar.gz",
+    author="Frogmane",
+    author_email="",
+    url="https://github.com/xznhj8129/uNAVlib",
+    download_url="",
     keywords=['CogniFly', 'Betaflight', 'iNAV', 'drone', 'UAV', 'Multi Wii Serial Protocol', 'MSP'],
     install_requires=['pyserial'],
     classifiers=[

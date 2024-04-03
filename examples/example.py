@@ -30,7 +30,7 @@ import sys
 import time
 import serial
 
-from yamspy import MSPy
+from unavlib import MSPy
 
 """Usage example... and testing ;)
 This simple example will send all possible MSP commands, but the ones from avoid_list.
