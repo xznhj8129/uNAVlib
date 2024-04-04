@@ -62,7 +62,7 @@ from serial import SerialException
 
 from . import msp_ctrl
 from . import msp_codes
-from . import msp_constants
+from . import msp_vars
 
 class MSPy:
     MSPCodes = msp_codes.MSPCodes
@@ -99,7 +99,7 @@ class MSPy:
         """
 
         # set as attributes all the hardcoded MSP constants that were once here
-        for key, value in vars(msp_constants).items():
+        for key, value in vars(msp_vars).items():
             if not key.startswith('_'):
                 setattr(self, key, value)
 

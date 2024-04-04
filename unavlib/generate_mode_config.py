@@ -1,6 +1,6 @@
 import time
 from . import MSPy
-from . import msp_constants
+from . import msp_vars
 from argparse import ArgumentParser
 import json
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         exit(1)
     channels = [[]] * 16
     jsonmodes = {"board_info": boardinfo}
-    modenames = msp_constants.modesID_INAV
+    modenames = msp_vars.modesID_INAV
     for i in moderanges:
         modename = modenames[i[0]]
         ch = i[1]

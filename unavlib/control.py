@@ -6,7 +6,7 @@ import argparse
 from . import mspy
 from . import msp_ctrl
 from . import msp_codes
-from . import msp_constants
+from . import msp_vars
 
 class unav_controller():
     def __init__(self, mode_config, device, baudrate=115200, trials=1, use_tcp=False, use_proxy=False):
