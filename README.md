@@ -47,7 +47,7 @@ Allows MSP protocol to override RC channels coming from a transmitter, allowing 
 * Flight mode `MSP RC Override` is active.
 
 ## Proxy
-This fork's starting point is the [proxy branch](https://github.com/thecognifly/YAMSPy/tree/proxy) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use YAMSPy in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
+This fork's starting point is the [yb/stable branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use YAMSPy in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
 
 ```
 $ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330
