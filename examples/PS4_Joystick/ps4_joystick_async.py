@@ -90,7 +90,7 @@ from evdev import InputDevice, ecodes, ff
 
 
 # pip3 install git+https://github.com/ricardodeazambuja/YAMSPy.git
-from yamspy import MSPy
+from unavlib import MSPy
 
 from tof_node import ToF
 from optflow_node import OptFlow

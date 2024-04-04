@@ -2,7 +2,6 @@ import threading
 from collections import deque
 from itertools import cycle
 import argparse
-import tomllib
 
 from . import mspy
 from . import msp_ctrl

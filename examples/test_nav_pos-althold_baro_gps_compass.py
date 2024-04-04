@@ -5,9 +5,9 @@ import datetime
 from math import cos
 
 
-from yamspy import MSPy, msp_ctrl
+from unavlib import MSPy, msp_ctrl
 
-# $ python -m yamspy.msp_proxy --ports 54310 54320 54330 54340
+# $ python -m unavlib.msp_proxy --ports 54310 54320 54330 54340
 serial_port = 54320
 # serial_port = '/dev/ttyACM0'
 FC_SEND_LOOP_TIME = 1/20
@@ -77,7 +77,14 @@ def update_gps(now):
 
     return gps_data
 
-with MSPy(device=serial_port, loglevel='WARNING', baudrate=115200, use_tcp=True, min_time_between_writes=1/50) as board:
+with MSPy(device=serial_port, loglevel='WARNING', baudrate=115200, use_tcp=True) as board:
+    command_list = ['MSP_API_VERSION', 'MSP_FC_VARIANT', 'MSP_FC_VERSION', 'MSP_BUILD_INFO',
+                    'MSP_BOARD_INFO', 'MSP_UID', 'MSP_ACC_TRIM', 'MSP_NAME', 'MSP_STATUS',
+                    'MSP_STATUS_EX','MSP_BATTERY_CONFIG', 'MSP_BATTERY_STATE', 'MSP_BOXNAMES']
+    for msg in command_list:
+        if board.send_RAW_msg(MSPy.MSPCodes[msg], data=[]):
+            dataHandler = board.receive_msg()
+            board.process_recv_data(dataHandler)
     try:
         #
         # GPS

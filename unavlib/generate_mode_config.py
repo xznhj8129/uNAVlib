@@ -4,6 +4,8 @@ from unavlib.inav_modes import modes_id
 from argparse import ArgumentParser
 import json
 
+# written for wrong branch, rewrite it
+
 def deserialise_modes(buf):
     PERM_ARM = 0
     MAX_MODE_ACTIVATION_CONDITION_COUNT = 40
