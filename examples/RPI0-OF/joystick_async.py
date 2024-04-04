@@ -13,7 +13,7 @@ import uvloop
 import evdev
 from evdev import InputDevice, ecodes, ff
 
-from yamspy import MSPy
+from unavlib import MSPy
 
 
 from camera import Camera

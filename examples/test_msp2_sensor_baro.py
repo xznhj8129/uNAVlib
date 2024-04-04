@@ -2,7 +2,7 @@
 import time
 import struct
 
-from yamspy import MSPy, msp_ctrl
+from unavlib import MSPy, msp_ctrl
 
 # $ python -m yamspy.msp_proxy --ports 54310 54320 54330 54340
 # serial_port = 54340

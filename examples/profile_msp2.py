@@ -10,7 +10,7 @@ import cProfile
 import pstats
 from pstats import SortKey
 
-from yamspy import MSPy
+from unavlib import MSPy
 
 #
 # On Linux, your serial port will probably be something like

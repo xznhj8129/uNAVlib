@@ -1,6 +1,6 @@
 import time
 
-from yamspy import MSPy
+from unavlib import MSPy
 
 #
 # On Linux, your serial port will probably be something like
@@ -24,6 +24,8 @@ if __name__ == '__main__':
 
     msg_list = ['MSP2_INAV_STATUS', 'MSP2_INAV_ANALOG']
     with MSPy(device=serial_port, loglevel='DEBUG', baudrate=115200) as board:
+        print(board.CONFIG)
+        """
         while True:
             for msg in msg_list:
                 prev = time.monotonic()
@@ -38,3 +40,4 @@ if __name__ == '__main__':
                     # 4. After the parser, the instance is populated.
                     print(dataHandler)
                 print(f"{msg}: f={1/(time.monotonic()-prev):0.3}Hz")
+                """

@@ -1,6 +1,6 @@
 import time
 from unavlib import MSPy
-from unavlib.inav_modes import modes_id
+from unavlib.msp_constants import modesID_INAV
 from argparse import ArgumentParser
 import json
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     jsonmodes = {"board_info": boardinfo}
 
     for i in moderanges:
-        modename = list(modes_id.keys())[list(modes_id.values()).index(i[0])]
+        modename = list(modesID_INAV.keys())[list(modesID_INAV.values()).index(i[0])]
         ch = i[1]
         valmin = 900+(i[2]*25)
         valmax = 900+(i[3]*25)
