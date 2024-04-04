@@ -215,7 +215,7 @@ class MSPy:
         return 1
 
 
-    def basic_info(self, returninfo=False):
+    def basic_info(self):
         """Basic info about the flight controller to distinguish between the many flavours.
         """
         msg = 'MSP_API_VERSION'
@@ -254,10 +254,6 @@ class MSPy:
             self.process_recv_data(dataHandler)
     
         print(self.CONFIG)
-        if returninfo:
-            return self.CONFIG
-        else:
-            print(self.CONFIG)
 
     def fast_read_altitude(self):
         # Request altitude

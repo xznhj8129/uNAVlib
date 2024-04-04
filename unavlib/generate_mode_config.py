@@ -1,6 +1,6 @@
 import time
-from unavlib import MSPy
-from unavlib.msp_constants import modesID_INAV
+from . import MSPy
+from . import msp_constants
 from argparse import ArgumentParser
 import json
 
@@ -28,7 +28,6 @@ def get_modes(serial_port):
             exit(1)
         prev = time.monotonic()
         code_value = MSPy.MSPCodes['MSP_MODE_RANGES']
-        boardinfo = board.basic_info(returninfo=True)
         msg_processed = False
 
         while not msg_processed:
@@ -52,12 +51,13 @@ def get_modes(serial_port):
                             if not invalid:
                                 mranges.append((buf[i], buf[i+1], buf[i+2], buf[i+3]))
                         i += 4
-                    return (boardinfo,mranges)
+                    return (board.CONFIG, mranges)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Get modes configuration from FC')
-    parser.add_argument('--serialport', action='store', default="/dev/serial0", help='serial port')
+    parser.add_argument('--serialport', action='store', required=True, help='serial port')
     arguments = parser.parse_args()
+    print(arguments)
     serial_port = arguments.serialport
     boardinfo, moderanges = get_modes(serial_port)
     if len(moderanges)==0:
@@ -65,14 +65,13 @@ if __name__ == '__main__':
         exit(1)
     channels = [[]] * 16
     jsonmodes = {"board_info": boardinfo}
-
+    modenames = msp_constants.modesID_INAV
     for i in moderanges:
-        modename = list(modesID_INAV.keys())[list(modesID_INAV.values()).index(i[0])]
+        modename = modenames[i[0]]
         ch = i[1]
         valmin = 900+(i[2]*25)
         valmax = 900+(i[3]*25)
         print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}".format(i[0], modename,ch,ch+5,valmin,valmax))
-        #channels[ch+4].append([i[0], valmin, valmax])
         jsonmodes[modename] = [ch+5,[valmin, valmax]]
 
     with open("modes.json", "w+") as f:
