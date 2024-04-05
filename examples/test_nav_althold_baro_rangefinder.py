@@ -2,9 +2,9 @@
 import time
 import struct
 
-from yamspy import MSPy, msp_ctrl
+from unavlib import MSPy, msp_ctrl
 
-# $ python -m yamspy.msp_proxy --ports 54310 54320 54330 54340
+# $ python -m unavlib.msp_proxy --ports 54310 54320 54330 54340
 serial_port = 54320
 # serial_port = '/dev/ttyACM0'
 FC_SEND_LOOP_TIME = 1/10

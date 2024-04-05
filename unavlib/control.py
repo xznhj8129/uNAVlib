@@ -10,7 +10,7 @@ from . import msp_vars
 
 class unav_controller():
     def __init__(self, mode_config, device, baudrate=115200, trials=1, use_tcp=False, use_proxy=False):
-        self.channels = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        self.channels = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         self.pwm_range = [1000,2000]
         self.mode_range = [900,2100]
         self.mode_increments = 25
@@ -23,8 +23,12 @@ class unav_controller():
         self.mspy_logfilename='MSPy.log' 
         self.mspy_logfilemode='a'
 
+    def pwm_clamp(n):
+        return max(min(self.pwm_range[0], n), self.pwm_range[1])
+    
+
 if __main__:
-    mode_config = configparser.ConfigParser()
+    pass
 
 
 
