@@ -43,7 +43,8 @@ class unav_controller():
 
     def get_modes(self):
         for i in self.modes:
-            print(i)
+            print(i,modes[i[0]])
+        return modes.keys()
 
     def toggle_mode(self,mode):
         modemean = mean(self.modes[mode][1])
@@ -60,6 +61,8 @@ class unav_controller():
         if self.msp_override and ch in self.msp_override_chs:
             self.channel[channel_order.index(ch)] = value
     
+
+    # NOT FINISHED DO NOT USE
     def control_loop(self): 
         while True:
 
@@ -175,7 +178,6 @@ class unav_controller():
                         elif next_msg == 'MSP_RC':
                             print("RC Channels Values: {}".format(board.RC['channels']))
                             if board.RC['channels'][5] >1300 and board.RC['channels'][5] <1800  and flightmode == 1:
-                                flightmode = 2
                                 print('\n########## MISSION MODE ############')
 
                         #print("GUI cycleTime: {0:2.2f}ms (average {1:2.2f}Hz)".format((last_cycleTime)*900,  1/(sum(average_cycle)/len(average_cycle))))
