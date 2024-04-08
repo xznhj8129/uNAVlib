@@ -1531,6 +1531,16 @@ class MSPy:
     def process_MSP_SET_BLACKBOX_CONFIG(self, data):
         logging.info("Blackbox config saved")
 
+    def process_MSP_MOTOR_TELEMETRY(self, data):
+        motorCount = self.readbytes(data, size=8, unsigned=True)
+        for i in range(motorCount):
+            self.MOTOR_TELEMETRY_DATA['rpm'][i] = self.readbytes(data, size=32, unsigned=True)
+            self.MOTOR_TELEMETRY_DATA['invalidPercent'][i] = self.readbytes(data, size=16, unsigned=True)
+            self.MOTOR_TELEMETRY_DATA['temperature'][i] = self.readbytes(data, size=8, unsigned=True)
+            self.MOTOR_TELEMETRY_DATA['voltage'][i] = self.readbytes(data, size=16, unsigned=True)
+            self.MOTOR_TELEMETRY_DATA['current'][i] = self.readbytes(data, size=16, unsigned=True)
+            self.MOTOR_TELEMETRY_DATA['consumption'][i] = self.readbytes(data, size=16, unsigned=True)
+
     # TODO: This changed and it will need to check the BF version to decode things correctly
     # def process_MSP_TRANSPONDER_CONFIG(self, data):
     #     bytesRemaining = len(data)
