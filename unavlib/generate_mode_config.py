@@ -57,13 +57,11 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Get modes configuration from FC')
     parser.add_argument('--serialport', action='store', required=True, help='serial port')
     arguments = parser.parse_args()
-    print(arguments)
-    serial_port = arguments.serialport
-    boardinfo, moderanges = get_modes(serial_port)
+    boardinfo, moderanges = get_modes(arguments.serial_port)
     if len(moderanges)==0:
         print("Error: No mode settings returned")
         exit(1)
-    channels = [[]] * 16
+    channels = [[]] * 18
     jsonmodes = {"board_info": boardinfo}
     modenames = msp_vars.modesID_INAV
     for i in moderanges:
@@ -71,7 +69,7 @@ if __name__ == '__main__':
         ch = i[1]
         valmin = 900+(i[2]*25)
         valmax = 900+(i[3]*25)
-        print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}".format(i[0], modename,ch,ch+5,valmin,valmax))
+        print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}".format(i[0], modename, ch, ch+5, valmin, valmax))
         jsonmodes[modename] = [ch+5,[valmin, valmax]]
 
     with open("modes.json", "w+") as f:
