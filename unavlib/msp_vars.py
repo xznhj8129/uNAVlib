@@ -47,6 +47,15 @@ SENSOR_DATA = {
 
 MOTOR_DATA = [0]*8
 
+MOTOR_TELEMETRY_DATA = {
+    'rpm': [0]*8,
+    'invalidPercent': [0]*8,
+    'temperature': [0]*8,
+    'voltage': [0]*8,
+    'current': [0]*8,
+    'consumption': [0]*8,
+}
+
 # defaults
 # roll, pitch, yaw, throttle, aux 1, ... aux n
 RC = {
