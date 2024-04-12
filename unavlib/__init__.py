@@ -266,6 +266,7 @@ class MSPy:
             msg = self.receive_raw_msg(size = (6+data_length))[5:]
             converted_msg = struct.unpack('<i', msg[:-1])[0]
             self.SENSOR_DATA['altitude'] = round((converted_msg / 100.0), 2) # correct scale factor
+            return self.SENSOR_DATA['altitude']
 
     def fast_read_imu(self):
         """Request, read and process RAW IMU
@@ -300,9 +301,23 @@ class MSPy:
             self.SENSOR_DATA['magnetometer'][0] = converted_msg[6]
             self.SENSOR_DATA['magnetometer'][1] = converted_msg[7]
             self.SENSOR_DATA['magnetometer'][2] = converted_msg[8]
+            return {"accelerometer": self.SENSOR_DATA['accelerometer'],
+                    "gyroscope": self.SENSOR_DATA['gyroscope'],
+                    "magnetometer": self.SENSOR_DATA['magnetometer']}
+
+            """
+            failure happened here, catch it
+            Traceback (most recent call last):
+            File "/uNAVlib/examples/test_msp2.py", line 30, in <module>
+                print('imu:',board.fast_read_imu())
+                            ^^^^^^^^^^^^^^^^^^^^^
+            File "/uNAVlib/unavlib/__init__.py", line 285, in fast_read_imu
+                converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            struct.error: unpack requires a buffer of 18 bytes"""
 
 
-    def fast_read_attitude(self):
+    def fast_read_attitude(self): 
         """Request, read and process the ATTITUDE (Roll, Pitch and Yaw in degrees)
         """
 
@@ -316,10 +331,12 @@ class MSPy:
             data_length = 6
             msg = self.receive_raw_msg(size = (6+data_length))[5:]
             converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
-
-            self.SENSOR_DATA['kinematics'][0] = converted_msg[0] / 10.0 # x
-            self.SENSOR_DATA['kinematics'][1] = converted_msg[1] / 10.0 # y
-            self.SENSOR_DATA['kinematics'][2] = converted_msg[2] # z
+            self.SENSOR_DATA['kinematics'][0] = converted_msg[0] / 10.0 # x ROLL
+            self.SENSOR_DATA['kinematics'][1] = converted_msg[1] / 10.0 # y PITCH
+            self.SENSOR_DATA['kinematics'][2] = converted_msg[2] # z YAW
+            return {"pitch": self.SENSOR_DATA['kinematics'][1],
+                    "yaw": self.SENSOR_DATA['kinematics'][2],
+                    "roll": self.SENSOR_DATA['kinematics'][0]}
     
     
     def fast_read_analog(self):
@@ -351,6 +368,7 @@ class MSPy:
             self.ANALOG['last_received_timestamp'] = int(time.time()) # why not monotonic? where is time synchronized?
             if not self.INAV:
                 self.ANALOG['voltage'] = converted_msg[4] / 100 # BF has this 2 bytes value here
+            return self.ANALOG
 
 
     def fast_msp_rc_cmd(self, cmds):
@@ -1368,6 +1386,7 @@ class MSPy:
             self.RX_CONFIG['rcSmoothingDerivativeCutoff'] = self.readbytes(data, size=8, unsigned=True)
             self.RX_CONFIG['rcSmoothingInputType'] = self.readbytes(data, size=8, unsigned=True)
             self.RX_CONFIG['rcSmoothingDerivativeType'] = self.readbytes(data, size=8, unsigned=True)
+
     def process_MSP_FAILSAFE_CONFIG(self, data):
         self.FAILSAFE_CONFIG['failsafe_delay'] = self.readbytes(data, size=8, unsigned=True)
         self.FAILSAFE_CONFIG['failsafe_off_delay'] = self.readbytes(data, size=8, unsigned=True)
@@ -1528,6 +1547,7 @@ class MSPy:
             self.BLACKBOX['blackboxPDenom'] = self.readbytes(data, size=16, unsigned=True)
         else:
             pass # API no longer supported (INAV 2.3.0)
+
     def process_MSP_SET_BLACKBOX_CONFIG(self, data):
         logging.info("Blackbox config saved")
 

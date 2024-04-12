@@ -332,7 +332,7 @@ def keyboard_controller(screen):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='simpleUI.py: Simple UI (toy one really) to test YAMSPy')
-    parser.add_argument('--serialport', type=str, default='/dev/ttyACM0',
+    parser.add_argument('--serialport', type=str, default='/dev/ttyUSB0',
                                   help='serial port (e.g. /dev/ttyACM0')
     args = parser.parse_args()
     SERIAL_PORT = args.serialport

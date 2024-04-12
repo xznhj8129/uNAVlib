@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Get modes configuration from FC')
     parser.add_argument('--serialport', action='store', required=True, help='serial port')
     arguments = parser.parse_args()
-    boardinfo, moderanges = get_modes(arguments.serial_port)
+    boardinfo, moderanges = get_modes(arguments.serialport)
     if len(moderanges)==0:
         print("Error: No mode settings returned")
         exit(1)

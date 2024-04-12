@@ -72,7 +72,7 @@ GPS_DATA = {
     'speed':                      0,
     'ground_course':              0,
     'distanceToHome':             0,
-    'ditectionToHome':            0,
+    'directionToHome':            0, # not "ditectionToHome"
     'update':                     0,
     'chn':                        [],
     'svid':                       [],
@@ -573,4 +573,153 @@ modesID_INAV = {
     62: 'MIXER PROFILE 2',
     63: 'MIXER TRANSITION',
     64: 'ANG HOLD'
+}
+
+navigation_enums = {
+    "safehomeUsageMode_e": {
+        {"SAFEHOME_USAGE_OFF": 0, "SAFEHOME_USAGE_RTH": 1, "SAFEHOME_USAGE_RTH_FS": 2}
+    },
+    "fwAutolandState_t": {
+        {
+            "FW_AUTOLAND_STATE_IDLE": 0,
+            "FW_AUTOLAND_STATE_LOITER": 1,
+            "FW_AUTOLAND_STATE_DOWNWIND": 2,
+            "FW_AUTOLAND_STATE_BASE_LEG": 3,
+            "FW_AUTOLAND_STATE_FINAL_APPROACH": 4,
+            "FW_AUTOLAND_STATE_GLIDE": 5,
+            "FW_AUTOLAND_STATE_FLARE": 6,
+        }
+    },
+    "nav_reset_type_e": {
+        {"NAV_RESET_NEVER": 0, "NAV_RESET_ON_FIRST_ARM": 1, "NAV_RESET_ON_EACH_ARM": 2}
+    },
+    "navRTHAllowLanding_e": {
+        {
+            "NAV_RTH_ALLOW_LANDING_NEVER": 0,
+            "NAV_RTH_ALLOW_LANDING_ALWAYS": 1,
+            "NAV_RTH_ALLOW_LANDING_FS_ONLY": 2,
+        }
+    },
+    "navExtraArmingSafety_e": {
+        {"NAV_EXTRA_ARMING_SAFETY_ON": 0, "NAV_EXTRA_ARMING_SAFETY_ALLOW_BYPASS": 1}
+    },
+    "navArmingBlocker_e": {
+        {
+            "NAV_ARMING_BLOCKER_NONE": 0,
+            "NAV_ARMING_BLOCKER_MISSING_GPS_FIX": 1,
+            "NAV_ARMING_BLOCKER_NAV_IS_ALREADY_ACTIVE": 2,
+            "NAV_ARMING_BLOCKER_FIRST_WAYPOINT_TOO_FAR": 3,
+            "NAV_ARMING_BLOCKER_JUMP_WAYPOINT_ERROR": 4,
+        }
+    },
+    "navOverridesMotorStop_e": {
+        {"NOMS_OFF_ALWAYS": 0, "NOMS_OFF": 1, "NOMS_AUTO_ONLY": 2, "NOMS_ALL_NAV": 3}
+    },
+    "navRTHClimbFirst_e": {
+        {"RTH_CLIMB_OFF": 0, "RTH_CLIMB_ON": 1, "RTH_CLIMB_ON_FW_SPIRAL": 2}
+    },
+    "navFwLaunchStatus_e": {
+        {"FW_LAUNCH_DETECTED": 4, "FW_LAUNCH_ABORTED": 9, "FW_LAUNCH_FLYING": 10}
+    },
+    "wpMissionPlannerStatus_e": {
+        {"WP_PLAN_WAIT": 0, "WP_PLAN_SAVE": 1, "WP_PLAN_OK": 2, "WP_PLAN_FULL": 3}
+    },
+    "navMissionRestart_e": {
+        {"WP_MISSION_START": 0, "WP_MISSION_RESUME": 1, "WP_MISSION_SWITCH": 2}
+    },
+    "rthTrackbackMode_e": {
+        {"RTH_TRACKBACK_OFF": 0, "RTH_TRACKBACK_ON": 1, "RTH_TRACKBACK_FS": 2}
+    },
+    "wpFwTurnSmoothing_e": {
+        {
+            "WP_TURN_SMOOTHING_OFF": 0,
+            "WP_TURN_SMOOTHING_ON": 1,
+            "WP_TURN_SMOOTHING_CUT": 2,
+        }
+    },
+    "navMcAltHoldThrottle_e": {
+        {"MC_ALT_HOLD_STICK": 0, "MC_ALT_HOLD_MID": 1, "MC_ALT_HOLD_HOVER": 2}
+    },
+    "navWaypointActions_e": {
+        {
+            "NAV_WP_ACTION_WAYPOINT": 1,
+            "NAV_WP_ACTION_HOLD_TIME": 3,
+            "NAV_WP_ACTION_RTH": 4,
+            "NAV_WP_ACTION_SET_POI": 5,
+            "NAV_WP_ACTION_JUMP": 6,
+            "NAV_WP_ACTION_SET_HEAD": 7,
+            "NAV_WP_ACTION_LAND": 8,
+        }
+    },
+    "navWaypointHeadings_e": {
+        {
+            "NAV_WP_HEAD_MODE_NONE": 0,
+            "NAV_WP_HEAD_MODE_POI": 1,
+            "NAV_WP_HEAD_MODE_FIXED": 2,
+        }
+    },
+    "navWaypointFlags_e": {{"NAV_WP_FLAG_HOME": 72, "NAV_WP_FLAG_LAST": 165}},
+    "navWaypointP3Flags_e": {
+        {
+            "NAV_WP_ALTMODE": "(1<<0)",
+            "NAV_WP_USER1": "(1<<1)",
+            "NAV_WP_USER2": "(1<<2)",
+            "NAV_WP_USER3": "(1<<3)",
+            "NAV_WP_USER4": "(1<<4)",
+        }
+    },
+    "navSystemStatus_Mode_e": {
+        {
+            "MW_GPS_MODE_NONE": 0,
+            "MW_GPS_MODE_HOLD": 1,
+            "MW_GPS_MODE_RTH": 2,
+            "MW_GPS_MODE_NAV": 3,
+            "MW_GPS_MODE_EMERG": 15,
+        }
+    },
+    "navSystemStatus_State_e": {
+        {
+            "MW_NAV_STATE_NONE": 0,
+            "MW_NAV_STATE_RTH_START": 1,
+            "MW_NAV_STATE_RTH_ENROUTE": 2,
+            "MW_NAV_STATE_HOLD_INFINIT": 3,
+            "MW_NAV_STATE_HOLD_TIMED": 4,
+            "MW_NAV_STATE_WP_ENROUTE": 5,
+            "MW_NAV_STATE_PROCESS_NEXT": 6,
+            "MW_NAV_STATE_DO_JUMP": 7,
+            "MW_NAV_STATE_LAND_START": 8,
+            "MW_NAV_STATE_LAND_IN_PROGRESS": 9,
+            "MW_NAV_STATE_LANDED": 10,
+            "MW_NAV_STATE_LAND_SETTLE": 11,
+            "MW_NAV_STATE_LAND_START_DESCENT": 12,
+            "MW_NAV_STATE_HOVER_ABOVE_HOME": 13,
+            "MW_NAV_STATE_EMERGENCY_LANDING": 14,
+            "MW_NAV_STATE_RTH_CLIMB": 15,
+        }
+    },
+    "navSystemStatus_Error_e": {
+        {
+            "MW_NAV_ERROR_NONE": 0,
+            "MW_NAV_ERROR_TOOFAR": 1,
+            "MW_NAV_ERROR_SPOILED_GPS": 2,
+            "MW_NAV_ERROR_WP_CRC": 3,
+            "MW_NAV_ERROR_FINISH": 4,
+            "MW_NAV_ERROR_TIMEWAIT": 5,
+            "MW_NAV_ERROR_INVALID_JUMP": 6,
+            "MW_NAV_ERROR_INVALID_DATA": 7,
+            "MW_NAV_ERROR_WAIT_FOR_RTH_ALT": 8,
+            "MW_NAV_ERROR_GPS_FIX_LOST": 9,
+            "MW_NAV_ERROR_DISARMED": 10,
+            "MW_NAV_ERROR_LANDING": 11,
+        }
+    },
+    "navSystemStatus_Flags_e": {
+        {
+            "MW_NAV_FLAG_ADJUSTING_POSITION": "1 << 0",
+            "MW_NAV_FLAG_ADJUSTING_ALTITUDE": "1 << 1",
+        }
+    },
+    "geoAltitudeConversionMode_e": {{"GEO_ALT_ABSOLUTE": 0, "GEO_ALT_RELATIVE": 1}},
+    "geoOriginResetMode_e": {{"GEO_ORIGIN_SET": 0, "GEO_ORIGIN_RESET_ALTITUDE": 1}},
+    "geoAltitudeDatumFlag_e": {{"NAV_WP_TAKEOFF_DATUM": 0, "NAV_WP_MSL_DATUM": 1}},
 }
