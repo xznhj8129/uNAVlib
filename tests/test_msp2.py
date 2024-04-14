@@ -17,6 +17,20 @@ from unavlib.modules.utils import dict_index
 # serial_port = "/dev/ttyACM0"
 #
 
+def get_sensor_config(board):
+    if board.send_RAW_msg(MSPy.MSPCodes['MSP_SENSOR_CONFIG'], data=[]):
+        dataHandler = board.receive_msg()
+        print(dataHandler)
+        ret = board.process_MSP_SENSOR_CONFIG(dataHandler)
+        print(ret)
+        return {
+            'acc_hardware': dict_index(inav_enums.accelerationSensor, board.SENSOR_CONFIG[0]), 
+            'baro_hardware': dict_index(inav_enums.baroSensor, board.SENSOR_CONFIG[1]), 
+            'mag_hardware': dict_index(inav_enums.magSensor, board.SENSOR_CONFIG[2]), 
+            'pitot': dict_index(inav_enums.pitotSensor, board.SENSOR_CONFIG[3]),
+            'rangefinder': dict_index(inav_enums.rangefinderType, board.SENSOR_CONFIG[4]), 
+            'opflow': dict_index(inav_enums.opflowSensor, board.SENSOR_CONFIG[5])
+        }
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -54,23 +68,21 @@ if __name__ == '__main__':
         print('GPS data:', board.GPS_DATA)
 
         #MSP_NAV_STATUS
-        sent = 0
-        while sent<=0:
-            sent = board.send_RAW_msg(MSPy.MSPCodes['MSP_NAV_STATUS'], data=[])
-        dataHandler = board.receive_msg()
-        board.process_recv_data(dataHandler)
-        mode, state, active_wp_action, active_wp_number, error, heading_hold_target = struct.unpack('<BBBBBH', dataHandler['dataView'])
-        mode = dict_index(inav_enums.navSystemStatus_Mode, mode)
-        state = dict_index(inav_enums.navSystemStatus_State, state)
-        error = dict_index(inav_enums.navSystemStatus_Error, error)
-        print()
-        print('NAV_STATUS:')
-        print(f"Mode: {mode}")
-        print(f"State: {state}")
-        print(f"Active WP Action: {active_wp_action}")
-        print(f"Active WP Number: {active_wp_number}")
-        print(f"Error: {error}")
-        print(f"Heading Hold Target: {heading_hold_target}")
+        if board.send_RAW_msg(MSPy.MSPCodes['MSP_NAV_STATUS'], data=[]):
+            dataHandler = board.receive_msg()
+            board.process_recv_data(dataHandler)
+            mode, state, active_wp_action, active_wp_number, error, heading_hold_target = struct.unpack('<BBBBBH', dataHandler['dataView'])
+            mode = dict_index(inav_enums.navSystemStatus_Mode, mode)
+            state = dict_index(inav_enums.navSystemStatus_State, state)
+            error = dict_index(inav_enums.navSystemStatus_Error, error)
+            print()
+            print('NAV_STATUS:')
+            print(f"Mode: {mode}")
+            print(f"State: {state}")
+            print(f"Active WP Action: {active_wp_action}")
+            print(f"Active WP Number: {active_wp_number}")
+            print(f"Error: {error}")
+            print(f"Heading Hold Target: {heading_hold_target}")
 
         """
         while True:

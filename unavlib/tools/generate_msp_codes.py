@@ -32,4 +32,4 @@ with open('../enums/msp_codes.py','w') as f:
 
     f.write('}\n')
     f.write("# The idea is to automate, so only the dictionary above needs to be updated\n")
-    f.write("MSPCodes2Str = {v: i for i,v in MSPCodes.items()}\n")
+    f.write("# R_MSPCodes = {v: i for i,v in MSPCodes.items()}\n")

@@ -76,10 +76,10 @@ def TCPServer(pipe, HOST, PORT, timeout=1/10000, time2sleep=0):
                     if not raw_bytes:
                         break
                     logging.debug(f"[{PORT}] msp_ctrl.receive_msg time: {1000*(monotonic()-tic)}ms")
-                    logging.debug(f"[{PORT}] {msp_codes.MSPCodes2Str[pc2fc['code']]} message_direction={'FC2PC' if pc2fc['message_direction'] else 'PC2FC'}, payload={len(pc2fc['dataView'])}, packet_error={pc2fc['packet_error']}")
+                    logging.debug(f"[{PORT}] {msp_codes.R_MSPCodes[pc2fc['code']]} message_direction={'FC2PC' if pc2fc['message_direction'] else 'PC2FC'}, payload={len(pc2fc['dataView'])}, packet_error={pc2fc['packet_error']}")
                     if pc2fc['packet_error'] != 0:
                         logging.error(f"[{PORT}] packet_error receiving from TCP!!!!")
-                    if 'MSP2_SENSOR' in msp_codes.MSPCodes2Str[pc2fc['code']]:
+                    if 'MSP2_SENSOR' in msp_codes.R_MSPCodes[pc2fc['code']]:
                         pipe.send([PORT,raw_bytes,False]) # to FC (proxy)
                     else:
                         pipe.send([PORT,raw_bytes,True]) # to FC (proxy)
@@ -162,7 +162,7 @@ def main(ports, device, baudrate, timeout=1/1000):
                 tic = monotonic()
                 fc2pc, raw_bytes = msp_ctrl.receive_msg(ser_read, logging, output_raw_bytes=True) # from FC (serial port)
                 logging.debug(f"[MAIN-{PORT}] msp_ctrl.receive_msg time: {1000*(monotonic()-tic)}ms")
-                logging.debug(f"[MAIN-{PORT}] {msp_codes.MSPCodes2Str[fc2pc['code']]} message_direction={'FC2PC' if fc2pc['message_direction'] else 'PC2FC'}, payload={len(fc2pc['dataView'])}, packet_error={fc2pc['packet_error']}")
+                logging.debug(f"[MAIN-{PORT}] {msp_codes.R_MSPCodes[fc2pc['code']]} message_direction={'FC2PC' if fc2pc['message_direction'] else 'PC2FC'}, payload={len(fc2pc['dataView'])}, packet_error={fc2pc['packet_error']}")
                 if fc2pc['packet_error'] != 0:
                     logging.error(f"[MAIN-{PORT}] packet_error receiving from serial port!!!!")
                 pipe_local.send(raw_bytes) # to PC (TCP)

@@ -334,7 +334,7 @@ class connMSP():
         else:
 
             if (not dataHandler['unsupported']):
-                processor = getattr(self.mspy, "process_" + self.mspy.MSPCodes2Str[code], None)
+                processor = getattr(self.mspy, "process_" + self.mspy.R_MSPCodes[code], None)
                 if processor: # if nothing is found, should be None
                     try:
                         if data:

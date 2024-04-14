@@ -12,6 +12,7 @@ from .modules import msp_ctrl
 from .enums import inav_enums
 from .enums import msp_codes
 from .enums import msp_vars
+from .modules.utils import dict_reverse
 
 from .modules.tcp_conn import TCPSocket
 from .modules.boardconn import connMSP
@@ -20,10 +21,10 @@ from .modules.fast_functions import fastMSP
 
 
 class MSPy:
-    MSPCodes = msp_codes.MSPCodes
-    MSPCodes2Str = msp_codes.MSPCodes2Str
 
     SIGNATURE_LENGTH = 32
+    MSPCodes = msp_codes.MSPCodes
+    R_MSPCodes = dict_reverse(MSPCodes)
 
     def __init__(self, device, baudrate=115200, trials=1, 
                  logfilename='MSPy.log', logfilemode='a', loglevel='INFO', timeout=1/100,
@@ -146,3 +147,11 @@ class MSPy:
     def __exit__(self, exc_type, exc_value, traceback):
         if not self.conn.closed:
             self.conn.close()
+
+for attr_name in dir(inav_enums):
+    if not attr_name.startswith("__"):
+        attr = getattr(inav_enums, attr_name)
+        if isinstance(attr, dict): 
+            reversed_dict = dict_reverse(attr)
+            setattr(MSPy, f"R_{attr_name}", reversed_dict)
+            setattr(MSPy, attr_name, attr)

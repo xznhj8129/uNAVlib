@@ -71,7 +71,7 @@ def example(serial_port):
                     if board.send_RAW_msg(MSPy.MSPCodes[msg], data=[]):
                         print('{} >>> requested!'.format(msg))
                         dataHandler = board.receive_msg()
-                        codestr = MSPy.MSPCodes2Str.get(dataHandler['code'])
+                        codestr = MSPy.R_MSPCodes.get(dataHandler['code'])
                         if codestr:
                             print('Received >>> {}'.format(codestr))
                             board.process_recv_data(dataHandler)
