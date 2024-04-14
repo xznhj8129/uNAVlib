@@ -13,8 +13,7 @@ from .enums import inav_enums
 from .enums import msp_codes
 from .enums import msp_vars
 from .modules.utils import dict_reverse
-
-from .modules.tcp_conn import TCPSocket
+from .modules.utils import TCPSocket
 from .modules.boardconn import connMSP
 from .modules.process import processMSP
 from .modules.fast_functions import fastMSP

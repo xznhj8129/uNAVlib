@@ -1,0 +1,24 @@
+0.1.1:  Major refactor, changes to how it handles enums and codes to enable easier development and use
+        So far non-breaking, things may have broken without me noticing, but quick testing shows no problems with pre-existing examples
+
+        split __init__.py into multiple components using facade inheritance:
+
+            __init__.py : entry point with setuptools data    
+
+            main.py : main class with builtins, extended with modules loaded from setattr
+
+            modules/ : classes that extend main class
+                boardconn.py : most important board connection-related functions
+                msp_ctrl.py : raw MSP protocol functions
+                process.py : looong list of MSP specific message handling functions
+                fast_functions.py : simplified wrappers for specific message types
+                utils.py : some dict and socket functions used through the code
+               
+            enums/ : files with dicts of code value enums mapped to a string
+                inav_enums.py : INAV enums parsed from source
+                msp_codes.py : MSP message codes
+                msp_vars.py : Long list of variables used in the main MSPy class
+
+            tools/ : some tools, some for testing and will be integrated into a main class later
+
+0.1.0:  YAMSPy fork, mostly exploration of how it works and some utilities to interact with INAV

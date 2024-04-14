@@ -110,6 +110,7 @@ venv.bak/
 # development specific stuff
 notes.txt
 original__init__.py
+old_readme.md
 
 # user-specific stuff
 modes.json
