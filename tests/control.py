@@ -1,3 +1,5 @@
+# BOILERPLATE DO NOT USE
+
 import threading
 from collections import deque
 from itertools import cycle # cycle('ABCD') → A B C D A B C D ...
