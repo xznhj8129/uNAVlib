@@ -1,7 +1,7 @@
 import threading
 from collections import deque
-from itertools import cycle
-import argparse
+from itertools import cycle # cycle('ABCD') → A B C D A B C D ...
+import argparse 
 
 # import asyncio
 
@@ -52,22 +52,44 @@ class unav_controller():
             self.channels[ self.modes[mode][0]-1 ] = 0
         else:
             self.channels[ self.modes[mode][0]-1 ] = modemean
-        print(channels) #debug just making sure
+        print(channels) # debug just making sure
 
     def pwm_clamp(self, n):
         return max(min(self.pwm_range[0], n), self.pwm_range[1])
 
-    def set_rc_channel(ch, value):
+    def set_rc_channel(self, ch, value):
         if self.msp_override and ch in self.msp_override_chs:
             self.channel[channel_order.index(ch)] = value
     
+    def get_gps_data(self):
+        """Traceback (most recent call last):
+        File "/uNAVlib/examples/test_msp2.py", line 48, in <module>
+            board.process_MSP_RAW_GPS(dataHandler['dataView'])
+        File "/uNAVlib/unavlib/__init__.py", line 720, in process_MSP_RAW_GPS
+            self.GPS_DATA['fix'] = self.readbytes(data, size=8, unsigned=True)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/uNAVlib/unavlib/__init__.py", line 432, in readbytes
+            buffer.append(data.pop(0))
+                        ^^^^^^^^^^^
+        IndexError: pop from empty list"""
+
+        if self.board.send_RAW_msg(MSPy.MSPCodes['MSP_RAW_GPS'], data=[]):
+            dataHandler = self.board.receive_msg()
+            self.board.process_MSP_RAW_GPS(dataHandler['dataView'])
+        if self.board.send_RAW_msg(MSPy.MSPCodes['MSP_COMP_GPS'], data=[]):
+            dataHandler = self.board.receive_msg()
+            self.board.process_MSP_COMP_GPS(dataHandler['dataView'])
+        if self.board.send_RAW_msg(MSPy.MSPCodes['MSP_GPSSTATISTICS'], data=[]):
+            dataHandler = self.board.receive_msg()
+            self.board.process_MSP_GPSSTATISTICS(dataHandler['dataView'])
+        print(board.GPS_DATA) # debug
 
     # NOT FINISHED DO NOT USE
     def control_loop(self): 
         while True:
 
             # Max periods for:
-            CTRL_LOOP_TIME = 1/100
+            CTRL_LOOP_TIME = 1/100 # 
             SLOW_MSGS_LOOP_TIME = 1/5 # these messages take a lot of time slowing down the loop...
 
             NO_OF_CYCLES_AVERAGE_GUI_TIME = 10

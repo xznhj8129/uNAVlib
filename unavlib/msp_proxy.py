@@ -24,9 +24,8 @@ from signal import SIGINT
 
 import serial
 
-from . import msp_ctrl
-from . import msp_codes
-
+from ..modules import msp_ctrl
+from ..enums import msp_codes
 
 def TCPServer(pipe, HOST, PORT, timeout=1/10000, time2sleep=0):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -209,6 +208,6 @@ if __name__ == '__main__':
                         stream=sys.stdout)
     
     try:
-        main(args.ports, args.serial, args.baudrate, timeout=1/1000)
+        main(args.ports, args.serial[0], args.baudrate, timeout=1/1000)
     except KeyboardInterrupt:
         print("\nBye!")

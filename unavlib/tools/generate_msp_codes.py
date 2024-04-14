@@ -25,7 +25,7 @@ for l in data_bf:
                     continue
             codes[code_str] = code_value
 
-with open('msp_codes.py','w') as f:
+with open('../enums/msp_codes.py','w') as f:
     f.write("MSPCodes = {\n")
     for code in codes:
         f.write(f"\'{code}\': {codes[code]},\n")

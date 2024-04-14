@@ -1,8 +1,5 @@
 import argparse
 
-def dict_index(d, target_value):
-    return [key for key, value in d.items() if value == target_value][0]
-
 def extract_enums_from_file(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
@@ -30,11 +27,12 @@ def extract_enums_from_file(file_path):
                 key, value = line.split('=')
                 key = key.strip()
                 value = value.split(',')[0].split('//')[0].strip()
-                value = value
                 # Handle hexadecimal values
-                base = 16 if 'x' in value else 10
                 try:
-                    value = int(value, base)
+                    if 'x' in value:
+                        value = hex(value)
+                    else:
+                        value = int(value)
                 except:
                     pass
                 enums[current_enum][key] = value
@@ -54,10 +52,11 @@ if __name__ == '__main__':
     parser.add_argument('--file', action='store', required=True, help='serial port')
     arguments = parser.parse_args()
     extracted_enums = extract_enums_from_file(arguments.file)
-    string = "enums = {\n"
+    string = ""
+    #string = "enums = {\n"
     for enum_name, enum_dict in extracted_enums.items():
-        string+= '    "'+enum_name+'" : {'+str(enum_dict)+'},\n'
-        #string+=f'    {"enum_name"}: {enum_dict},\n'
-    string=string.rstrip(',\n')
-    string+='\n}'
+        #string+= '    {"'+enum_name+'"} : {'+str(enum_dict)+'},\n'
+        string+=f'{enum_name} = {enum_dict}\n'
+    #string=string.rstrip(',\n')
+    #string+='\n}'
     print(string)

@@ -2,12 +2,12 @@ import struct
 
 # Define a function to pack data into the MSP waypoint structure
 def pack_msp_wp(wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
-    msp_wp = struct.pack('<BBIIIHHHB', wp_no, action, lat, lon, altitude, p1, p2, p3, flag)
+    msp_wp = struct.pack('<BBiiihhhB', wp_no, action, lat, lon, altitude, p1, p2, p3, flag)
     return msp_wp
 
 # Example usage:
 wp_no = 1
-action = 209 
+action = 1 
 lat = int(54.137110 * 1e7)  
 lon = int(-4.719426 * 1e7)
 alt = 4200  # Altitude in cm as per INAV's handling (if 42 meters, it's 4200 cm).

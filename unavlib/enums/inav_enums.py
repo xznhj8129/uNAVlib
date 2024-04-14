@@ -1,0 +1,405 @@
+armingDisableFlagNames_BF = { # use dict not list because it's not perfectly sequential
+    0: "NOGYRO",
+    1: "FAILSAFE",
+    2: "RXLOSS",
+    3: "BADRX",
+    4: "BOXFAILSAFE",
+    5: "RUNAWAY",
+    6: "CRASH",
+    7: "THROTTLE",
+    8: "ANGLE",
+    9: "BOOTGRACE",
+    10: "NOPREARM",
+    11: "LOAD",
+    12: "CALIB",
+    13: "CLI",
+    14: "CMS",
+    15: "BST",
+    16: "MSP",
+    17: "PARALYZE",
+    18: "GPS",
+    19: "RESCUE SW",
+    20: "RPMFILTER",
+    21: "ARMSWITCH"
+    }
+
+armingDisableFlagNames_INAV = {
+    0: "OK_TO_ARM",
+    1: "PREVENT_ARMING",
+    2: "ARMED",
+    3: "WAS_EVER_ARMED",
+    4: "SIMULATOR_MODE",
+    7: "BLOCKED_FAILSAFE_SYSTEM",
+    8: "BLOCKED_UAV_NOT_LEVEL",
+    9: "BLOCKED_SENSORS_CALIBRATING",
+    10: "BLOCKED_SYSTEM_OVERLOADED",
+    11: "BLOCKED_NAVIGATION_SAFETY",
+    12: "BLOCKED_COMPASS_NOT_CALIBRATED",
+    13: "BLOCKED_ACCELEROMETER_NOT_CALIBRATED",
+    14: "BLOCKED_ARMING_DISABLED_ARM_SWITCH",
+    15: "BLOCKED_HARDWARE_FAILURE",
+    16: "BLOCKED_ARMING_DISABLED_BOXFAILSAFE",
+    17: "BLOCKED_ARMING_DISABLED_BOXKILLSWITCH",
+    18: "BLOCKED_ARMING_DISABLED_RC_LINK",
+    19: "BLOCKED_ARMING_DISABLED_THROTTLE",
+    20: "BLOCKED_ARMING_DISABLED_CLI",
+    21: "BLOCKED_ARMING_DISABLED_CMS_MENU",
+    22: "BLOCKED_ARMING_DISABLED_OSD_MENU",
+    23: "BLOCKED_ARMING_DISABLED_ROLLPITCH_NOT_CENTERED",
+    24: "BLOCKED_ARMING_DISABLED_SERVO_AUTOTRIM",
+    25: "BLOCKED_ARMING_DISABLED_OOM",
+    26: "BLOCKED_INVALID_SETTING",
+    27: "BLOCKED_ARMING_DISABLED_PWM_OUTPUT_ERROR",
+    28: "BLOCKED_ARMING_DISABLED_NO_PREARM",
+    29: "BLOCKED_ARMING_DISABLED_DSHOT_BEEPER",
+    30: "BLOCKED_ARMING_DISABLED_LANDING_DETECTED",
+    }
+
+modesID_INAV = {
+    0: 'ARM',
+    1: 'ANGLE',
+    2: 'HORIZON',
+    3: 'NAV ALTHOLD',
+    5: 'HEADING HOLD',
+    6: 'HEADFREE',
+    7: 'HEADADJ',
+    8: 'CAMSTAB',
+    10: 'NAV RTH',
+    11: 'NAV POSHOLD',
+    12: 'MANUAL',
+    13: 'BEEPER',
+    15: 'LEDS OFF',
+    16: 'LIGHTS',
+    19: 'OSD OFF',
+    20: 'TELEMETRY',
+    21: 'AUTO TUNE',
+    26: 'BLACKBOX',
+    27: 'FAILSAFE',
+    28: 'NAV WP',
+    29: 'AIR MODE',
+    30: 'HOME RESET',
+    31: 'GCS NAV',
+    32: 'FPV ANGLE MIX',
+    33: 'SURFACE',
+    34: 'FLAPERON',
+    35: 'TURN ASSIST',
+    36: 'NAV LAUNCH',
+    37: 'SERVO AUTOTRIM',
+    38: 'KILLSWITCH',
+    39: 'CAMERA CONTROL 1',
+    40: 'CAMERA CONTROL 2',
+    41: 'CAMERA CONTROL 3',
+    42: 'OSD ALT 1',
+    43: 'OSD ALT 2',
+    44: 'OSD ALT 3',
+    45: 'NAV COURSE HOLD',
+    46: 'MC BRAKING',
+    47: 'USER1',
+    48: 'USER2',
+    49: 'LOITER CHANGE',
+    50: 'MSP RC OVERRIDE',
+    51: 'PREARM',
+    52: 'TURTLE',
+    53: 'NAV CRUISE',
+    54: 'AUTO LEVEL',
+    55: 'WP PLANNER',
+    59: 'MISSION CHANGE',
+    60: 'BEEPER MUTE',
+    61: 'MULTI FUNCTION',
+    62: 'MIXER PROFILE 2',
+    63: 'MIXER TRANSITION',
+    64: 'ANG HOLD'
+}
+
+safehomeUsageMode = {
+    "SAFEHOME_USAGE_OFF": 0,
+    "SAFEHOME_USAGE_RTH": 1,
+    "SAFEHOME_USAGE_RTH_FS": 2,
+}
+
+fwAutolandState = {
+    "FW_AUTOLAND_STATE_IDLE": 0,
+    "FW_AUTOLAND_STATE_LOITER": 1,
+    "FW_AUTOLAND_STATE_DOWNWIND": 2,
+    "FW_AUTOLAND_STATE_BASE_LEG": 3,
+    "FW_AUTOLAND_STATE_FINAL_APPROACH": 4,
+    "FW_AUTOLAND_STATE_GLIDE": 5,
+    "FW_AUTOLAND_STATE_FLARE": 6,
+}
+
+nav_reset_type = {
+    "NAV_RESET_NEVER": 0,
+    "NAV_RESET_ON_FIRST_ARM": 1,
+    "NAV_RESET_ON_EACH_ARM": 2,
+}
+
+navRTHAllowLanding = {
+    "NAV_RTH_ALLOW_LANDING_NEVER": 0,
+    "NAV_RTH_ALLOW_LANDING_ALWAYS": 1,
+    "NAV_RTH_ALLOW_LANDING_FS_ONLY": 2,
+}
+
+navExtraArmingSafety = {
+    "NAV_EXTRA_ARMING_SAFETY_ON": 0,
+    "NAV_EXTRA_ARMING_SAFETY_ALLOW_BYPASS": 1,
+}
+
+navArmingBlocker = {
+    "NAV_ARMING_BLOCKER_NONE": 0,
+    "NAV_ARMING_BLOCKER_MISSING_GPS_FIX": 1,
+    "NAV_ARMING_BLOCKER_NAV_IS_ALREADY_ACTIVE": 2,
+    "NAV_ARMING_BLOCKER_FIRST_WAYPOINT_TOO_FAR": 3,
+    "NAV_ARMING_BLOCKER_JUMP_WAYPOINT_ERROR": 4,
+}
+
+navOverridesMotorStop = {
+    "NOMS_OFF_ALWAYS": 0,
+    "NOMS_OFF": 1,
+    "NOMS_AUTO_ONLY": 2,
+    "NOMS_ALL_NAV": 3,
+}
+
+navRTHClimbFirst = {
+    "RTH_CLIMB_OFF": 0,
+    "RTH_CLIMB_ON": 1,
+    "RTH_CLIMB_ON_FW_SPIRAL": 2,
+}
+
+navFwLaunchStatus = {
+    "FW_LAUNCH_DETECTED": 4,
+    "FW_LAUNCH_ABORTED": 9,
+    "FW_LAUNCH_FLYING": 10,
+}
+
+wpMissionPlannerStatus = {
+    "WP_PLAN_WAIT": 0,
+    "WP_PLAN_SAVE": 1,
+    "WP_PLAN_OK": 2,
+    "WP_PLAN_FULL": 3,
+}
+
+navMissionRestart = {
+    "WP_MISSION_START": 0,
+    "WP_MISSION_RESUME": 1,
+    "WP_MISSION_SWITCH": 2,
+}
+
+rthTrackbackMode = {
+    "RTH_TRACKBACK_OFF": 0,
+    "RTH_TRACKBACK_ON": 1,
+    "RTH_TRACKBACK_FS": 2,
+}
+
+wpFwTurnSmoothing = {
+    "WP_TURN_SMOOTHING_OFF": 0,
+    "WP_TURN_SMOOTHING_ON": 1,
+    "WP_TURN_SMOOTHING_CUT": 2,
+}
+
+navMcAltHoldThrottle = {
+    "MC_ALT_HOLD_STICK": 0,
+    "MC_ALT_HOLD_MID": 1,
+    "MC_ALT_HOLD_HOVER": 2,
+}
+
+navWaypointActions = {
+    "NAV_WP_ACTION_WAYPOINT": "0x01",
+    "NAV_WP_ACTION_HOLD_TIME": "0x03",
+    "NAV_WP_ACTION_RTH": "0x04",
+    "NAV_WP_ACTION_SET_POI": "0x05",
+    "NAV_WP_ACTION_JUMP": "0x06",
+    "NAV_WP_ACTION_SET_HEAD": "0x07",
+    "NAV_WP_ACTION_LAND": "0x08",
+}
+
+navWaypointHeadings = {
+    "NAV_WP_HEAD_MODE_NONE": 0,
+    "NAV_WP_HEAD_MODE_POI": 1,
+    "NAV_WP_HEAD_MODE_FIXED": 2,
+}
+
+navWaypointFlags = {
+    "NAV_WP_FLAG_HOME": "0x48",
+    "NAV_WP_FLAG_LAST": "0xA5",
+}
+
+navWaypointP3Flags = {
+    "NAV_WP_ALTMODE": "(1<<0)",
+    "NAV_WP_USER1": "(1<<1)",
+    "NAV_WP_USER2": "(1<<2)",
+    "NAV_WP_USER3": "(1<<3)",
+    "NAV_WP_USER4": "(1<<4)",
+}
+
+navSystemStatus_Mode = {
+    "MW_GPS_MODE_NONE": 0,
+    "MW_GPS_MODE_HOLD": 1,
+    "MW_GPS_MODE_RTH": 2,
+    "MW_GPS_MODE_NAV": 3,
+    "MW_GPS_MODE_EMERG": 15,
+}
+
+navSystemStatus_State = {
+    "MW_NAV_STATE_NONE": 0,
+    "MW_NAV_STATE_RTH_START": 1,
+    "MW_NAV_STATE_RTH_ENROUTE": 2,
+    "MW_NAV_STATE_HOLD_INFINIT": 3,
+    "MW_NAV_STATE_HOLD_TIMED": 4,
+    "MW_NAV_STATE_WP_ENROUTE": 5,
+    "MW_NAV_STATE_PROCESS_NEXT": 6,
+    "MW_NAV_STATE_DO_JUMP": 7,
+    "MW_NAV_STATE_LAND_START": 8,
+    "MW_NAV_STATE_LAND_IN_PROGRESS": 9,
+    "MW_NAV_STATE_LANDED": 10,
+    "MW_NAV_STATE_LAND_SETTLE": 11,
+    "MW_NAV_STATE_LAND_START_DESCENT": 12,
+    "MW_NAV_STATE_HOVER_ABOVE_HOME": 13,
+    "MW_NAV_STATE_EMERGENCY_LANDING": 14,
+    "MW_NAV_STATE_RTH_CLIMB": 15,
+}
+
+navSystemStatus_Error = {
+    "MW_NAV_ERROR_NONE": 0,
+    "MW_NAV_ERROR_TOOFAR": 1,
+    "MW_NAV_ERROR_SPOILED_GPS": 2,
+    "MW_NAV_ERROR_WP_CRC": 3,
+    "MW_NAV_ERROR_FINISH": 4,
+    "MW_NAV_ERROR_TIMEWAIT": 5,
+    "MW_NAV_ERROR_INVALID_JUMP": 6,
+    "MW_NAV_ERROR_INVALID_DATA": 7,
+    "MW_NAV_ERROR_WAIT_FOR_RTH_ALT": 8,
+    "MW_NAV_ERROR_GPS_FIX_LOST": 9,
+    "MW_NAV_ERROR_DISARMED": 10,
+    "MW_NAV_ERROR_LANDING": 11,
+}
+
+navSystemStatus_Flags = {
+    "MW_NAV_FLAG_ADJUSTING_POSITION": "1 << 0",
+    "MW_NAV_FLAG_ADJUSTING_ALTITUDE": "1 << 1",
+}
+
+geoAltitudeConversionMode = {
+    "GEO_ALT_ABSOLUTE": 0,
+    "GEO_ALT_RELATIVE": 1,
+}
+
+geoOriginResetMode = {
+    "GEO_ORIGIN_SET": 0,
+    "GEO_ORIGIN_RESET_ALTITUDE": 1,
+}
+
+geoAltitudeDatumFlag = {
+    "NAV_WP_TAKEOFF_DATUM": 0,
+    "NAV_WP_MSL_DATUM": 1,
+}
+
+accelerationSensor = {
+    'ACC_NONE': 0, 
+    'ACC_AUTODETECT': 1, 
+    'ACC_MPU6000': 2, 
+    'ACC_MPU6500': 3, 
+    'ACC_MPU9250': 4, 
+    'ACC_BMI160': 5, 
+    'ACC_ICM20689': 6, 
+    'ACC_BMI088': 7, 
+    'ACC_ICM42605': 8, 
+    'ACC_BMI270': 9, 
+    'ACC_LSM6DXX': 10, 
+    'ACC_FAKE': 11, 
+    'ACC_MAX': 11
+}
+
+baroSensor = {
+    'BARO_NONE': 0, 
+    'BARO_AUTODETECT': 1, 
+    'BARO_BMP085': 2, 
+    'BARO_MS5611': 3, 
+    'BARO_BMP280': 4, 
+    'BARO_MS5607': 5, 
+    'BARO_LPS25H': 6, 
+    'BARO_SPL06': 7, 
+    'BARO_BMP388': 8, 
+    'BARO_DPS310': 9, 
+    'BARO_B2SMPB': 10, 
+    'BARO_MSP': 11, 
+    'BARO_FAKE': 12, 
+    'BARO_MAX': 12
+}
+
+batteryState = {
+    'BATTERY_OK': 0, 
+    'BATTERY_WARNING': 1, 
+    'BATTERY_CRITICAL': 2, 
+    'BATTERY_NOT_PRESENT': 3
+}
+
+tempSensorType = {
+    "TEMP_SENSOR_NONE": 0,
+    "TEMP_SENSOR_LM75": 1,
+    "TEMP_SENSOR_DS18B20": 2
+} 
+
+rangefinderType = {
+    "RANGEFINDER_NONE": 0,
+    "RANGEFINDER_SRF10": 1,
+    "RANGEFINDER_VL53L0X": 2,
+    "RANGEFINDER_MSP": 3,
+    "RANGEFINDER_BENEWAKE": 4,
+    "RANGEFINDER_VL53L1X": 5,
+    "RANGEFINDER_US42": 6,
+    "RANGEFINDER_TOF10102I2C": 7,
+    "RANGEFINDER_FAKE": 8
+}
+
+gyroSensor = {
+    'GYRO_NONE': 0, 
+    'GYRO_AUTODETECT': 1, 
+    'GYRO_MPU6000': 2, 
+    'GYRO_MPU6500': 3, 
+    'GYRO_MPU9250': 4, 
+    'GYRO_BMI160': 5, 
+    'GYRO_ICM20689': 6, 
+    'GYRO_BMI088': 7, 
+    'GYRO_ICM42605': 8, 
+    'GYRO_BMI270': 9, 
+    'GYRO_LSM6DXX': 10, 
+    'GYRO_FAKE': 11
+}
+
+dynamicGyroNotchMode = {
+    'DYNAMIC_NOTCH_MODE_2D': 0, 
+    'DYNAMIC_NOTCH_MODE_R': 1, 
+    'DYNAMIC_NOTCH_MODE_P': 2, 
+    'DYNAMIC_NOTCH_MODE_Y': 3, 
+    'DYNAMIC_NOTCH_MODE_RP': 4, 
+    'DYNAMIC_NOTCH_MODE_RY': 5, 
+    'DYNAMIC_NOTCH_MODE_PY': 6, 
+    'DYNAMIC_NOTCH_MODE_3D': 7
+}
+
+hardwareSensorStatus = {
+    'HW_SENSOR_NONE': 0, 
+    'HW_SENSOR_OK': 1, 
+    'HW_SENSOR_UNAVAILABLE': 2, 
+    'HW_SENSOR_UNHEALTHY': 3
+}
+
+magSensor_e = {
+    'MAG_NONE': 0, 
+    'MAG_AUTODETECT': 1, 
+    'MAG_HMC5883': 2, 
+    'MAG_AK8975': 3, 
+    'MAG_MAG3110': 4, 
+    'MAG_AK8963': 5, 
+    'MAG_IST8310': 6, 
+    'MAG_QMC5883': 7, 
+    'MAG_MPU9250': 8, 
+    'MAG_IST8308': 9, 
+    'MAG_LIS3MDL': 10, 
+    'MAG_MSP': 11, 
+    'MAG_RM3100': 12, 
+    'MAG_VCM5883': 13, 
+    'MAG_MLX90393': 14, 
+    'MAG_FAKE': 15, 
+    'MAG_MAX': 15
+}

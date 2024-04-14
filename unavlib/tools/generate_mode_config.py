@@ -1,6 +1,6 @@
 import time
-from . import MSPy
-from . import msp_vars
+from .. import MSPy
+from ..enums import inav_enums
 from argparse import ArgumentParser
 import json
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         exit(1)
     channels = [[]] * 18
     jsonmodes = {"board_info": boardinfo}
-    modenames = msp_vars.modesID_INAV
+    modenames = inav_enums.modesID_INAV
     for i in moderanges:
         modename = modenames[i[0]]
         ch = i[1]

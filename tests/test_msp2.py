@@ -1,7 +1,8 @@
 import time
 import struct
-
 from unavlib import MSPy
+from unavlib.enums import inav_enums
+from unavlib.modules.utils import dict_index
 
 #
 # On Linux, your serial port will probably be something like
@@ -15,6 +16,7 @@ from unavlib import MSPy
 #
 # serial_port = "/dev/ttyACM0"
 #
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -49,7 +51,7 @@ if __name__ == '__main__':
         if board.send_RAW_msg(MSPy.MSPCodes['MSP_GPSSTATISTICS'], data=[]):
             dataHandler = board.receive_msg()
             board.process_MSP_GPSSTATISTICS(dataHandler['dataView'])
-        print(board.GPS_DATA)
+        print('GPS data:', board.GPS_DATA)
 
         #MSP_NAV_STATUS
         sent = 0
@@ -57,15 +59,19 @@ if __name__ == '__main__':
             sent = board.send_RAW_msg(MSPy.MSPCodes['MSP_NAV_STATUS'], data=[])
         dataHandler = board.receive_msg()
         board.process_recv_data(dataHandler)
-        print(dataHandler['dataView'])
         mode, state, active_wp_action, active_wp_number, error, heading_hold_target = struct.unpack('<BBBBBH', dataHandler['dataView'])
-
+        mode = dict_index(inav_enums.navSystemStatus_Mode, mode)
+        state = dict_index(inav_enums.navSystemStatus_State, state)
+        error = dict_index(inav_enums.navSystemStatus_Error, error)
+        print()
+        print('NAV_STATUS:')
         print(f"Mode: {mode}")
         print(f"State: {state}")
         print(f"Active WP Action: {active_wp_action}")
         print(f"Active WP Number: {active_wp_number}")
         print(f"Error: {error}")
         print(f"Heading Hold Target: {heading_hold_target}")
+
         """
         while True:
             for msg in msg_list:
