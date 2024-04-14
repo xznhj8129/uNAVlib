@@ -77,7 +77,6 @@ class MSPy:
         self.read_buffer = b''
 
         if self.use_tcp is False:
-            import serial # pyserial
             self.conn = serial.Serial()
             self.conn.port = self.device
             self.conn.baudrate = baudrate

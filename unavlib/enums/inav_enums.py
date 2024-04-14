@@ -21,7 +21,7 @@ armingDisableFlagNames_BF = { # use dict not list because it's not perfectly seq
     19: "RESCUE SW",
     20: "RPMFILTER",
     21: "ARMSWITCH"
-    }
+}
 
 armingDisableFlagNames_INAV = {
     0: "OK_TO_ARM",
@@ -53,7 +53,7 @@ armingDisableFlagNames_INAV = {
     28: "BLOCKED_ARMING_DISABLED_NO_PREARM",
     29: "BLOCKED_ARMING_DISABLED_DSHOT_BEEPER",
     30: "BLOCKED_ARMING_DISABLED_LANDING_DETECTED",
-    }
+}
 
 modesID_INAV = {
     0: 'ARM',
@@ -384,7 +384,7 @@ hardwareSensorStatus = {
     'HW_SENSOR_UNHEALTHY': 3
 }
 
-magSensor_e = {
+magSensor = {
     'MAG_NONE': 0, 
     'MAG_AUTODETECT': 1, 
     'MAG_HMC5883': 2, 
@@ -402,4 +402,15 @@ magSensor_e = {
     'MAG_MLX90393': 14, 
     'MAG_FAKE': 15, 
     'MAG_MAX': 15
+}
+
+pitotSensor = {
+    'PITOT_NONE': 0, 
+    'PITOT_AUTODETECT': 1, 
+    'PITOT_MS4525': 2, 
+    'PITOT_ADC': 3, 
+    'PITOT_VIRTUAL': 4, 
+    'PITOT_FAKE': 5, 
+    'PITOT_MSP': 6, 
+    'PITOT_DLVR': 7
 }
