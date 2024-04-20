@@ -16,10 +16,10 @@ def send(board, msg_code, data=[]):
         board.process_recv_data(dataHandler)
         return dataHandler
 
-wp_no = 1
+wp_no = 2
 action = 1 
-lat = int(55.737110 * 1e7)  
-lon = int(-5.119426 * 1e7)
+lat = int(55.732110 * 1e7)  
+lon = int(-17.119426 * 1e7)
 alt = 4200  # Altitude in cm as per INAV's handling (if 42 meters, it's 4200 cm).
 p1 = 1200   
 p2 = 0     
@@ -29,38 +29,46 @@ print(lat,lon)
 packed_wp = pack_msp_wp(wp_no, action, lat, lon, alt, p1, p2, p3, flag)
 hex_string = ' '.join(f"{byte:02x}" for byte in packed_wp)
 print(hex_string)
+ret = {}
 
 with MSPy(device='/dev/ttyACM0', loglevel='DEBUG', baudrate=115200) as board:
     if board == 1: # an error occurred...
         raise Exception('Connection error')
 
-    print()
-    #print('MSP_SET_WP')
-    #a = send(board, 'MSP_SET_WP', data=packed_wp)
-    #print(a)
-    #print(unpack_msp_wp(a['dataView']))
+    try:
+        print()
+        print('MSP_SET_WP')
+        ret = send(board, 'MSP_SET_WP', data=packed_wp)
+        print(ret)
+        if len(ret['dataView'])>0:
+            print(unpack_msp_wp(ret['dataView']))
+        else:
+            print('return len 0')
 
-    print()
-    print('MSP_WP_GETINFO')
-    # https://github.com/iNavFlight/inav/blob/master/src/main/fc/fc_msp.c#L1423
-    ret = send(board, 'MSP_WP_GETINFO', data=[])
-    data = struct.unpack('<BBBB', ret['dataView'])
-    jsondat = {
-        "reserved": data[0],
-        "NAV_MAX_WAYPOINTS": data[1],
-        "isWaypointListValid": data[2],
-        "WaypointCount": data[3]
-    }
-    for key,value in jsondat.items():
-        print(key,value)
+        print()
+        print('MSP_WP_GETINFO')
+        # https://github.com/iNavFlight/inav/blob/master/src/main/fc/fc_msp.c#L1423
+        ret = send(board, 'MSP_WP_GETINFO', data=[])
+        print(ret)
+        data = struct.unpack('<BBBB', ret['dataView'])
+        jsondat = {
+            "reserved": data[0],
+            "NAV_MAX_WAYPOINTS": data[1],
+            "isWaypointListValid": data[2],
+            "WaypointCount": data[3]
+        }
+        for key,value in jsondat.items():
+            print(key,value)
 
-    print()
-    print('MSP_WP')
-    # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
-    for i in range(1,jsondat['WaypointCount']+1):
-        b = send(board, 'MSP_WP', data=struct.pack('B', i))
-        ret = unpack_msp_wp(b['dataView'])
-        print(i, ret)
+        print()
+        print('MSP_WP')
+        # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
+        for i in range(1,jsondat['WaypointCount']+1):
+            ret = send(board, 'MSP_WP', data=struct.pack('B', i))
+            b = unpack_msp_wp(ret['dataView'])
+            print(i, b)
 
-    #print(send(board, 'MSP_WP_MISSION_SAVE', data=[])) #unsupported
+        #print(send(board, 'MSP_WP_MISSION_SAVE', data=[])) #unsupported
 
+    except struct.error as e:
+        print(e, ret['dataView'])

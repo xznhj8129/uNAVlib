@@ -6,6 +6,8 @@ import sys
 import serial
 from select import select
 
+# WHY DO THESE SUCK SO MUCH
+
 class fastMSP():
     def __init__(self,mspy_instance):
         self.mspy = mspy_instance
@@ -29,15 +31,18 @@ class fastMSP():
 
         # Request IMU values
         if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_RAW_IMU']):
-            # dataHandler = self.mspy.receive_msg()
-            # self.mspy.process_recv_data(dataHandler)
+            dataHandler = self.mspy.receive_msg()
+            print(dataHandler['dataView'])
+            print(self.mspy.process_recv_data(dataHandler))
+            print(dataHandler['dataView'])
             # $ + M + < + data_length + msg_code + data + msg_crc
             # 6 bytes + data_length
             # data_length: 9 x 2 = 18 bytes
-            data_length = 18
-            msg = self.mspy.receive_raw_msg(size = (6+data_length))
-            msg = msg[5:]
-            converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
+            #data_length = 18
+            #msg = self.mspy.receive_raw_msg(size = (6+data_length))
+            #print(msg)
+            #msg = msg[5:]
+            #converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
 
             # /512 for mpu6050, /256 for mma
             # currently we are unable to differentiate between the sensor types, so we are going with 512

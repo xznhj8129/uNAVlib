@@ -96,7 +96,9 @@ class MSPy:
                 _,_,_ = select([self.conn],[],[])  # wait for data
                 data = self.conn.read(self.conn.in_waiting) # blocking
                 return data
+                
             self.read = ser_read
+            
             self.start = self.conn.open
         
         else :
@@ -131,7 +133,7 @@ class MSPy:
         try:
             return self.method_map[name]
         except KeyError:
-            raise AttributeError(f"'Facade' object has no attribute '{name}'")
+            raise AttributeError(f"MSPy object has no attribute '{name}'")
 
     def __enter__(self):
         is_connection_open = not self.connect(trials=self.ser_trials)
