@@ -1042,3 +1042,14 @@ class processMSP():
         
     def process_MSP_SET_RTC(self, data):
         logging.info('Real time clock set')
+
+
+    # unavlib new functions below
+
+    def process_MSP_NAV_STATUS(self,data):
+        self.mspy.NAV_STATUS['mode'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.mspy.NAV_STATUS['state'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.mspy.NAV_STATUS['active_wp_action'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.mspy.NAV_STATUS['active_wp_number'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.mspy.NAV_STATUS['error'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.mspy.NAV_STATUS['heading_hold_target'] = self.mspy.readbytes(data, size=16, unsigned=True)

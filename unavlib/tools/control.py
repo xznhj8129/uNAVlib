@@ -28,7 +28,7 @@ from unavlib.modules.fast_functions import fastMSP
 from unavlib import MSPy
 
 class UAVControl:
-    def __init__(self, device, baudrate):
+    def __init__(self, device, baudrate, drone_type="plane"):
         self.board = MSPy(device=device, loglevel='DEBUG', baudrate=baudrate)  # MSPy instance
         self.run = True
         self.connected = None
@@ -135,33 +135,14 @@ class UAVControl:
         if self.board.send_RAW_msg(MSPCodes['MSP_NAV_STATUS'], data=[]):
             dataHandler = self.board.receive_msg()
             self.board.process_recv_data(dataHandler)
-            # here do  self.mspy.readbytes(data, size=n, unsigned=True) instead of struct
-            mode = self.board.readbytes(dataHandler['dataView'], size=8, unsigned=True)
-            state = self.board.readbytes(dataHandler['dataView'], size=8, unsigned=True)
-            active_wp_action = self.board.readbytes(dataHandler['dataView'], size=8, unsigned=True)
-            active_wp_number = self.board.readbytes(dataHandler['dataView'], size=8, unsigned=True)
-            error = self.board.readbytes(dataHandler['dataView'], size=8, unsigned=True)
-            heading_hold_target = self.board.readbytes(dataHandler['dataView'], size=16, unsigned=True)
             #mode, state, active_wp_action, active_wp_number, error, heading_hold_target = struct.unpack('<BBBBBH', dataHandler['dataView'])
-
-            mode = dict_index(inav_enums.navSystemStatus_Mode, mode)
-            state = dict_index(inav_enums.navSystemStatus_State, state)
-            error = dict_index(inav_enums.navSystemStatus_Error, error)
-            print()
-            print('NAV_STATUS:')
-            print(f"Mode: {mode}")
-            print(f"State: {state}")
-            print(f"Active WP Action: {active_wp_action}")
-            print(f"Active WP Number: {active_wp_number}")
-            print(f"Error: {error}")
-            print(f"Heading Hold Target: {heading_hold_target}")
             return {
-                "mode": mode,
-                "state": state,
-                "wp_action": active_wp_action,
-                "wp_number": active_wp_number,
-                "error": error,
-                "heading_hold_tgt": heading_hold_target
+                "mode": dict_index(inav_enums.navSystemStatus_Mode, self.board.NAV_STATUS['mode']),
+                "state": dict_index(inav_enums.navSystemStatus_State, self.board.NAV_STATUS['state']),
+                "wp_action": self.board.NAV_STATUS['active_wp_action'],
+                "wp_number": self.board.NAV_STATUS['active_wp_number'],
+                "error": dict_index(inav_enums.navSystemStatus_Error, self.board.NAV_STATUS['error']),
+                "heading_hold_tgt": self.board.NAV_STATUS['heading_hold_target']
             }
         else:
             return None
@@ -169,17 +150,18 @@ class UAVControl:
     def get_gps_data(self):
         if self.board.send_RAW_msg(MSPCodes['MSP_RAW_GPS'], data=[]):
             dataHandler = self.board.receive_msg()
-            self.board.process_MSP_RAW_GPS(dataHandler['dataView'])
+            self.board.process_recv_data(dataHandler)
+            #self.board.process_MSP_RAW_GPS(dataHandler['dataView'])
         else:
             return None
         if self.board.send_RAW_msg(MSPCodes['MSP_COMP_GPS'], data=[]):
             dataHandler = self.board.receive_msg()
-            self.board.process_MSP_COMP_GPS(dataHandler['dataView'])
+            self.board.process_recv_data(dataHandler)
         else:
             return None
         if self.board.send_RAW_msg(MSPCodes['MSP_GPSSTATISTICS'], data=[]):
             dataHandler = self.board.receive_msg()
-            self.board.process_MSP_GPSSTATISTICS(dataHandler['dataView'])
+            self.board.process_recv_data(dataHandler)
         else:
             return None
         print(self.board.GPS_DATA) # debug

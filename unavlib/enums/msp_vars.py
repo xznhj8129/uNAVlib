@@ -462,3 +462,11 @@ TRANSPONDER = {
     'providers':                  [],
 }
 
+NAV_STATUS = {
+    'mode': 0,
+    'state': 0,
+    'active_wp_action': 0,
+    'active_wp_number': 0,
+    'error': 0,
+    'heading_hold_target': 0
+}

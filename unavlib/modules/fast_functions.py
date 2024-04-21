@@ -26,23 +26,19 @@ class fastMSP():
             return self.mspy.SENSOR_DATA['altitude']
 
     def fast_read_imu(self):
-        """Request, read and process RAW IMU
-        """
-
         # Request IMU values
         if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_RAW_IMU']):
-            dataHandler = self.mspy.receive_msg()
-            print(dataHandler['dataView'])
-            print(self.mspy.process_recv_data(dataHandler))
-            print(dataHandler['dataView'])
+            # WHY NOT THIS???!!! HOW SLOW IS IT?!
+            #dataHandler = self.mspy.receive_msg()
+            #self.mspy.process_recv_data(dataHandler)
             # $ + M + < + data_length + msg_code + data + msg_crc
             # 6 bytes + data_length
             # data_length: 9 x 2 = 18 bytes
-            #data_length = 18
-            #msg = self.mspy.receive_raw_msg(size = (6+data_length))
-            #print(msg)
-            #msg = msg[5:]
-            #converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
+
+            data_length = 18
+            msg = self.mspy.receive_raw_msg(size = (6+data_length))
+            msg = msg[5:]
+            converted_msg = struct.unpack('<%dh' % (data_length/2) , msg[:-1])
 
             # /512 for mpu6050, /256 for mma
             # currently we are unable to differentiate between the sensor types, so we are going with 512
@@ -149,6 +145,3 @@ class fastMSP():
             # The FC will send a code 0 message until it received enough RC msgs, then it
             # will return a code 200. However, the message is always empty (data_length = 0).
             _ = self.mspy.receive_raw_msg(size = 6)
-
-    def fast_read_gps(self):
-        pass
