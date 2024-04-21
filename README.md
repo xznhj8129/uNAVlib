@@ -49,6 +49,13 @@ If you can't connect (talk) to the FC:
 3. Verify the devices available using ```ls -lh /dev/serial*``` (or dev/ttyUSB* / dev/ttyACM*) and change it in the Python script if needed.
 4. Turn it off and on again
 
+## Planned features:
+* Mission Control object using asyncio
+* Automated tests
+* Mavlink compatibility
+* Failure mode tests and failsafes
+* C++ implementation
+
 ## TODO:
 * Write documentation
 * Write missing process_MSP functions
@@ -59,14 +66,6 @@ If you can't connect (talk) to the FC:
 * Refactor __init__.py into more manageable structure
 * Import all INAV enums into dictionaries
 * Generate enums automatically from INAV source
-
-## Planned features:
-* Mission Control object using asyncio
-* Automated tests
-* Mavlink compatibility
-* Failure mode tests and failsafes
-* C++ implementation
-
 
 ## Software Requirements:
 * Python >= 3.10
