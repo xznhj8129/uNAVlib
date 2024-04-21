@@ -111,6 +111,7 @@ venv.bak/
 notes.txt
 original__init__.py
 old_readme.md
+diagram.drawio
 
 # user-specific stuff
 modes.json

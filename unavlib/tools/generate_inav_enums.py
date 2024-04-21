@@ -1,6 +1,7 @@
 import argparse
 import json
 import glob, os
+import unavlib
 from unavlib.modules.utils import dict_index
 from unavlib.enums import base_enums
 
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate INAV enums')
     parser.add_argument('--src', action='store', required=True, help='INAV source code directory')
     arguments = parser.parse_args()
-    string="# from enums/base_enums.py\n"
+    string="# all enums available with reverse-lookup by integer by referencing R_enumName dict\n\n# imported from enums/base_enums.py\n"
 
     for enum_name in dir(base_enums):
         if not enum_name.startswith("__"):
@@ -90,7 +91,6 @@ if __name__ == '__main__':
             if extracted_enums:
                 print('#',f)
                 string += f"\n#{f}\n"
-                #string = ""
                 for enum_name, enum_dict in extracted_enums.items():
                     en = enum_name.replace("_e","").replace("_t","")
                     s = f"{en} = {{\n    "
@@ -100,6 +100,5 @@ if __name__ == '__main__':
                     print(pretty_string, end="")
                     print("\n}")
                     string+=s
-                #print(string)
-    with open("inav_enums.py","w+") as file:
+    with open(os.path.dirname(unavlib.__file__)+"/enums/inav_enums.py","w+") as file:
         file.write(string)

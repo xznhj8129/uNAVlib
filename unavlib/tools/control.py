@@ -39,8 +39,10 @@ class UAVControl:
         self.channels = [900] * 18
         self.pwm_range = [1000,2000]
         self.modes = {}
+        self.active_modes = []
         self.mode_range = [900,2100]
         self.mode_increments = 25
+        self.pids = {}
         self.pwm_midpoint = mean(self.pwm_range)
         self.msp_override = True
         self.msp_override_chs = []
@@ -62,17 +64,14 @@ class UAVControl:
         self.run = False
 
     async def connect(self):
-        # Emulate the __enter__ method's connection setup
         self.connected = await asyncio.get_running_loop().run_in_executor(self.executor, self._try_connect)
         if not self.connected:
             raise ConnectionError(f"Failed to connect to {self.device}")
 
     def _try_connect(self):
-        # This method tries to connect and mimics the __enter__ method of MSPy
         return not self.board.connect(trials=self.board.ser_trials)
 
     async def disconnect(self):
-        # Emulate the __exit__ method's cleanup logic
         if not self.board.conn.closed:
             await asyncio.get_running_loop().run_in_executor(self.executor, self.board.conn.close)
             self.connected = False
@@ -80,8 +79,15 @@ class UAVControl:
         else:
             print('FC already disconnected')
 
+    def add_pid(self, pidname, Kp=0.1, Ki=0.01, Kd=0.05, setpoint=0, output_limits=(0, 1)):
+        self.pids[pidname] = PID(Kp=Kp, Ki=Ki, Kd=Kd, setpoint=setpoint, output_limits=output_limits)
+
+    def update_pid(self, pidname, error):
+        return self.pids[pidname](error)
+
     def run_sync(self, func, *args):
         # Helper method to run synchronous methods of MSPy in an executor
+        # need to (maybe) wrap all the MSP functions in here with this
         return asyncio.get_running_loop().run_in_executor(self.executor, func, *args)
 
     def load_modes_config_file(self, mode_config_file):  # add function to get at init
@@ -95,12 +101,16 @@ class UAVControl:
             print(i, self.modes[i])
         return self.modes.keys()
 
-    def set_node(self, mode, on): # this needs to be more robust to handle when a mode is switched off
+    def set_mode(self, mode, on): # this needs to be more robust to handle when a mode is switched off
         if on:
             modemean = mean(self.modes[mode][1])
             self.channels[ self.modes[mode][0]-1 ] = modemean
+            if mode not in self.active_modes:
+                self.active_modes.append(mode)
         else:
             self.channels[ self.modes[mode][0]-1 ] = self.mode_range[0]
+            if mode in self.active_modes:
+                del self.active_modes[self.active_modes.index(mode)]
 
     def pwm_clamp(self, n):
         return max(min(self.pwm_range[0], n), self.pwm_range[1])
@@ -110,10 +120,6 @@ class UAVControl:
             self.channels[self.chorder.index(ch)] = value
         else:
             return None
-        #else:
-        #    chan = ch
-        #    if self.msp_override and ch in self.msp_override_chs:
-        #        self.channels[ch-1] = value
 
     def get_sensor_config(self):
         if self.board.send_RAW_msg(self.board.MSPCodes['MSP_SENSOR_CONFIG'], data=[]):
@@ -121,12 +127,12 @@ class UAVControl:
             ret = self.board.process_MSP_SENSOR_CONFIG(dataHandler)
             print(ret)
             return {
-                'acc_hardware': inav_enums.accelerationSensor_R[self.board.SENSOR_CONFIG[0]], 
-                'baro_hardware': dict_index(inav_enums.baroSensor, self.board.SENSOR_CONFIG[1]), 
-                'mag_hardware': dict_index(inav_enums.magSensor, self.board.SENSOR_CONFIG[2]), 
-                'pitot': dict_index(inav_enums.pitotSensor, self.board.SENSOR_CONFIG[3]),
-                'rangefinder': dict_index(inav_enums.rangefinderType, self.board.SENSOR_CONFIG[4]), 
-                'opflow': dict_index(inav_enums.opflowSensor, self.board.SENSOR_CONFIG[5])
+                'acc_hardware': self.board.R_accelerationSensor[self.board.SENSOR_CONFIG[0]], 
+                'baro_hardware': self.board.R_baroSensor[self.board.SENSOR_CONFIG[1]], 
+                'mag_hardware': self.board.R_magSensor[self.board.SENSOR_CONFIG[2]],
+                'pitot': self.board.R_pitotSensor[self.board.SENSOR_CONFIG[3]],
+                'rangefinder': self.board.R_rangefinderType[self.board.SENSOR_CONFIG[4]], 
+                'opflow': self.board.R_opflowSensor[self.board.SENSOR_CONFIG[5]]
             }
         else:
             return None
@@ -135,13 +141,12 @@ class UAVControl:
         if self.board.send_RAW_msg(MSPCodes['MSP_NAV_STATUS'], data=[]):
             dataHandler = self.board.receive_msg()
             self.board.process_recv_data(dataHandler)
-            #mode, state, active_wp_action, active_wp_number, error, heading_hold_target = struct.unpack('<BBBBBH', dataHandler['dataView'])
             return {
-                "mode": dict_index(inav_enums.navSystemStatus_Mode, self.board.NAV_STATUS['mode']),
-                "state": dict_index(inav_enums.navSystemStatus_State, self.board.NAV_STATUS['state']),
+                "mode": self.board.R_navSystemStatus_Mode[self.board.NAV_STATUS['mode']],
+                "state": self.board.R_navSystemStatus_State[self.board.NAV_STATUS['state']],
                 "wp_action": self.board.NAV_STATUS['active_wp_action'],
                 "wp_number": self.board.NAV_STATUS['active_wp_number'],
-                "error": dict_index(inav_enums.navSystemStatus_Error, self.board.NAV_STATUS['error']),
+                "error": self.board.R_navSystemStatus_Error[self.board.NAV_STATUS['error']],
                 "heading_hold_tgt": self.board.NAV_STATUS['heading_hold_target']
             }
         else:
@@ -151,7 +156,6 @@ class UAVControl:
         if self.board.send_RAW_msg(MSPCodes['MSP_RAW_GPS'], data=[]):
             dataHandler = self.board.receive_msg()
             self.board.process_recv_data(dataHandler)
-            #self.board.process_MSP_RAW_GPS(dataHandler['dataView'])
         else:
             return None
         if self.board.send_RAW_msg(MSPCodes['MSP_COMP_GPS'], data=[]):
@@ -173,7 +177,7 @@ class UAVControl:
             if self.board == 1: # an error occurred...
                 return 1
 
-            debugprint = False
+            debugprint = True
             self.get_modes()
             
             CTRL_LOOP_TIME = 1/100 # 
@@ -203,6 +207,7 @@ class UAVControl:
             self.warn_voltage = self.board.BATTERY_CONFIG['vbatwarningcellvoltage']*cellCount
             self.max_voltage = self.board.BATTERY_CONFIG['vbatmaxcellvoltage']*cellCount
 
+            if debugprint: print()
             if debugprint: print("apiVersion: {}".format(self.board.CONFIG['apiVersion']))
             if debugprint: print("flightControllerIdentifier: {}".format(self.board.CONFIG['flightControllerIdentifier']))
             if debugprint: print("flightControllerVersion: {}".format(self.board.CONFIG['flightControllerVersion']))
@@ -218,7 +223,7 @@ class UAVControl:
                 #
                 # IMPORTANT MESSAGES (CTRL_LOOP_TIME based)
                 #
-                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME:
+                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME and "MSP RC OVERRIDE" in self.active_modes:
                     last_loop_time = time.time()
                     # Send the RC channel values to the FC
                     #print(self.channels)
@@ -227,14 +232,8 @@ class UAVControl:
                         self.board.process_recv_data(dataHandler)
 
 
-
-                # SUPER FUCKING UNRELIABLE
-                #print('imu:',self.board.fast_read_imu())
-                #print('att:',self.board.fast_read_attitude()) 
-                #print('alt:',self.board.fast_read_altitude())
-
                 #
-                # fix this shit
+                # fix this 
                 #
                 # SLOW MSG processing (user GUI)
                 #
@@ -265,8 +264,8 @@ class UAVControl:
                     elif next_msg == 'MSP_MOTOR':
                         if debugprint: print("Motor Values: {}".format(self.board.MOTOR_DATA))
 
-                    #elif next_msg == 'MSP_RC':
-                    #    if debugprint: print("RC Channels Values: {}".format(self.board.RC['channels']))
+                    elif next_msg == 'MSP_RC':
+                        if debugprint: print("RC Channels Values: {}".format(self.board.RC['channels']))
                         
 
                 end_time = time.time()

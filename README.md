@@ -51,23 +51,28 @@ If you can't connect (talk) to the FC:
 
 ## TODO:
 * Write documentation
-* Write main Mission Control object using asyncio
 * Write missing process_MSP functions
 * Write functions that take and return **STRINGS AND JSON** from enum mapping instead of raw bytes and integers to MASSIVELY simplify development and usage
 * Implement/reproduce [MWPtools](https://github.com/stronnag/mwptools) functionality and tools
-* Write automated tests
-* Mavlink compatibility
-* Failure mode tests and failsafes
-* C++ implementation
 
 ## DONE:
 * Refactor __init__.py into more manageable structure
 * Import all INAV enums into dictionaries
 * Generate enums automatically from INAV source
 
+## Planned features:
+* Mission Control object using asyncio
+* Automated tests
+* Mavlink compatibility
+* Failure mode tests and failsafes
+* C++ implementation
+
+
 ## Software Requirements:
-* Python 3.10 or up
-* INAV 7.1 or up
+* Python >= 3.10
+* INAV >= 7.1
+* asyncio >= 3.4.3
+
 
 ## Installation:
 Option #1: Clone the repo so you will have the examples

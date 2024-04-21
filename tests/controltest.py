@@ -4,11 +4,11 @@ from unavlib.tools.control import UAVControl
 
 async def my_plan(uav):
     uav.get_gps_data()
-    #await asyncio.sleep(1)
+    await asyncio.sleep(1)
     navstatus = uav.get_nav_status()
-    #print(f"Navstatus: {navstatus}")
-    #await asyncio.sleep(1)
-    print('imu:',uav.board.fast_read_imu())
+    print(f"Navstatus: {navstatus}")
+    await asyncio.sleep(1)
+    print('imu:',uav.board.fast_read_imu()) # these are sketchy
     print('att:',uav.board.fast_read_attitude()) 
     print('alt:',uav.board.fast_read_altitude())
     uav.stop()
