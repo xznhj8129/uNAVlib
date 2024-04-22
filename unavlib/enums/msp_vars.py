@@ -470,3 +470,13 @@ NAV_STATUS = {
     'error': 0,
     'heading_hold_target': 0
 }
+
+INAV_MIXER = {
+    'motorDirectionInverted':   False,
+    'motorstopOnLow':           False,
+    'platformType':             0,
+    'hasFlaps':                 False,
+    'appliedMixerPreset':       0,
+    'MAX_SUPPORTED_MOTORS':     0,
+    'MAX_SUPPORTED_SERVOS':     0
+}

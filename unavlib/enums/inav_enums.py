@@ -1,4 +1,5 @@
 # all enums available with reverse-lookup by integer by referencing R_enumName dict
+
 # imported from enums/base_enums.py
 armingDisableFlagNames_BF = {
     "NOGYRO": 0,
@@ -54,6 +55,15 @@ armingDisableFlagNames_INAV = {
     "BLOCKED_ARMING_DISABLED_NO_PREARM": 28,
     "BLOCKED_ARMING_DISABLED_DSHOT_BEEPER": 29,
     "BLOCKED_ARMING_DISABLED_LANDING_DETECTED": 30
+}
+flyingPlatformType = {
+    "PLATFORM_MULTIROTOR": 0,
+    "PLATFORM_AIRPLANE": 1,
+    "PLATFORM_HELICOPTER": 2,
+    "PLATFORM_TRICOPTER": 3,
+    "PLATFORM_ROVER": 4,
+    "PLATFORM_BOAT": 5,
+    "PLATFORM_OTHER": 6
 }
 modesID_INAV = {
     "ARM": 0,
@@ -113,7 +123,7 @@ modesID_INAV = {
 
 
 # extracted from source
-#../../inav/src/main/navigation/navigation_private.h
+#../../../inav/src/main/navigation/navigation_private.h
 navSetWaypointFlags = {
     "NAV_POS_UPDATE_NONE": 0,
     "NAV_POS_UPDATE_Z": "1 << 1",
@@ -303,7 +313,7 @@ rthTargetMode = {
     "RTH_HOME_FINAL_LAND": 4
 }
 
-#../../inav/src/main/navigation/navigation_pos_estimator_private.h
+#../../../inav/src/main/navigation/navigation_pos_estimator_private.h
 navAGLEstimateQuality = {
     "SURFACE_QUAL_LOW": 0,
     "SURFACE_QUAL_MID": 1,
@@ -319,7 +329,7 @@ navPositionEstimationFlags = {
     "EST_Z_VALID": "(1 << 6)"
 }
 
-#../../inav/src/main/navigation/navigation.h
+#../../../inav/src/main/navigation/navigation.h
 safehomeUsageMode = {
     "SAFEHOME_USAGE_OFF": 0,
     "SAFEHOME_USAGE_RTH": 1,
@@ -478,7 +488,7 @@ geoAltitudeDatumFlag = {
     "NAV_WP_MSL_DATUM": 1
 }
 
-#../../inav/src/main/sensors/battery_config_structs.h
+#../../../inav/src/main/sensors/battery_config_structs.h
 currentSensor = {
     "CURRENT_SENSOR_NONE": 0,
     "CURRENT_SENSOR_ADC": 1,
@@ -502,7 +512,7 @@ batVoltageSource = {
     "BAT_VOLTAGE_SAG_COMP": 1
 }
 
-#../../inav/src/main/sensors/rangefinder.h
+#../../../inav/src/main/sensors/rangefinder.h
 rangefinderType = {
     "RANGEFINDER_NONE": 0,
     "RANGEFINDER_SRF10": 1,
@@ -515,7 +525,7 @@ rangefinderType = {
     "RANGEFINDER_FAKE": 8
 }
 
-#../../inav/src/main/sensors/gyro.h
+#../../../inav/src/main/sensors/gyro.h
 gyroSensor = {
     "GYRO_NONE": 0,
     "GYRO_AUTODETECT": 1,
@@ -541,7 +551,7 @@ dynamicGyroNotchMode = {
     "DYNAMIC_NOTCH_MODE_3D": 7
 }
 
-#../../inav/src/main/sensors/opflow.h
+#../../../inav/src/main/sensors/opflow.h
 opticalFlowSensor = {
     "OPFLOW_NONE": 0,
     "OPFLOW_CXOF": 1,
@@ -553,7 +563,7 @@ opflowQuality = {
     "OPFLOW_QUALITY_VALID": 1
 }
 
-#../../inav/src/main/sensors/battery.h
+#../../../inav/src/main/sensors/battery.h
 batteryState = {
     "BATTERY_OK": 0,
     "BATTERY_WARNING": 1,
@@ -561,14 +571,14 @@ batteryState = {
     "BATTERY_NOT_PRESENT": 3
 }
 
-#../../inav/src/main/sensors/temperature.h
+#../../../inav/src/main/sensors/temperature.h
 tempSensorType = {
     "TEMP_SENSOR_NONE": 0,
     "TEMP_SENSOR_LM75": 1,
     "TEMP_SENSOR_DS18B20": 2
 }
 
-#../../inav/src/main/sensors/pitotmeter.h
+#../../../inav/src/main/sensors/pitotmeter.h
 pitotSensor = {
     "PITOT_NONE": 0,
     "PITOT_AUTODETECT": 1,
@@ -580,7 +590,7 @@ pitotSensor = {
     "PITOT_DLVR": 7
 }
 
-#../../inav/src/main/sensors/sensors.h
+#../../../inav/src/main/sensors/sensors.h
 sensorIndex = {
     "SENSOR_INDEX_GYRO": 0,
     "SENSOR_INDEX_ACC": 1,
@@ -604,7 +614,7 @@ sensors = {
     "SENSOR_TEMP": "1 << 9"
 }
 
-#../../inav/src/main/sensors/acceleration.h
+#../../../inav/src/main/sensors/acceleration.h
 accelerationSensor = {
     "ACC_NONE": 0,
     "ACC_AUTODETECT": 1,
@@ -621,7 +631,7 @@ accelerationSensor = {
     "ACC_MAX": 11
 }
 
-#../../inav/src/main/sensors/barometer.h
+#../../../inav/src/main/sensors/barometer.h
 baroSensor = {
     "BARO_NONE": 0,
     "BARO_AUTODETECT": 1,
@@ -639,7 +649,7 @@ baroSensor = {
     "BARO_MAX": 12
 }
 
-#../../inav/src/main/sensors/diagnostics.h
+#../../../inav/src/main/sensors/diagnostics.h
 hardwareSensorStatus = {
     "HW_SENSOR_NONE": 0,
     "HW_SENSOR_OK": 1,
@@ -647,7 +657,7 @@ hardwareSensorStatus = {
     "HW_SENSOR_UNHEALTHY": 3
 }
 
-#../../inav/src/main/sensors/compass.h
+#../../../inav/src/main/sensors/compass.h
 magSensor = {
     "MAG_NONE": 0,
     "MAG_AUTODETECT": 1,

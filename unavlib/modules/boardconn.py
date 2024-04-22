@@ -168,13 +168,10 @@ class connMSP():
         while (flags):
             bitpos = ffs(flags) - 1
             flags &= ~(1 << bitpos)
-            if self.mspy.INAV:
-                result.append(self.mspy.armingDisableFlagNames_INAV.get(bitpos, ""))
-            else:
-                result.append(self.mspy.armingDisableFlagNames_BF.get(bitpos, ""))
+            result.append(self.mspy.R_armingDisableFlagNames_INAV[bitpos])
         return result
 
-
+    # why does this not show active modes?
     def process_mode(self, flag):
         """Translate the value from CONFIG['mode']
         """
@@ -182,7 +179,6 @@ class connMSP():
         for i in range(len(self.mspy.AUX_CONFIG)):
             if (self.bit_check(flag, i)):
                 result.append(self.mspy.AUX_CONFIG[i])
-
         return result
 
 
@@ -291,7 +287,7 @@ class connMSP():
 
 
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
-        mspv = 1 if code <= 255 else 2
+        mspv = 1 if code <= 255 else 2 # should i set to 2 always?
         bufView = msp_ctrl.prepare_RAW_msg(mspv, code, data)
         with self.mspy.port_write_lock:
             current_write = time.time()

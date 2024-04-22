@@ -1,3 +1,5 @@
+- Test proxy and make it work
+
 - Implement missing necessary MSP messages
     MSP messages not implemented in YAMSPy:
         MSP_PROTOCOL_VERSION

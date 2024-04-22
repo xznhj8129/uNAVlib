@@ -112,3 +112,13 @@ modesID_INAV = {
     "MIXER TRANSITION": 63,
     "ANG HOLD": 64,
 }
+
+flyingPlatformType  = {
+    "PLATFORM_MULTIROTOR": 0,
+    "PLATFORM_AIRPLANE": 1,
+    "PLATFORM_HELICOPTER": 2,
+    "PLATFORM_TRICOPTER": 3,
+    "PLATFORM_ROVER": 4,
+    "PLATFORM_BOAT": 5,
+    "PLATFORM_OTHER": 6
+} 
