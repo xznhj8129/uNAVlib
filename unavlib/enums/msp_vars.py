@@ -480,3 +480,7 @@ INAV_MIXER = {
     'MAX_SUPPORTED_MOTORS':     0,
     'MAX_SUPPORTED_SERVOS':     0
 }
+
+NAV_CONFIG = {
+
+}

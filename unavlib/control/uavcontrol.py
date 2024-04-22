@@ -25,11 +25,11 @@ from unavlib.modules import msp_ctrl
 from unavlib.modules.boardconn import connMSP
 from unavlib.modules.process import processMSP
 from unavlib.modules.fast_functions import fastMSP
-from unavlib.modules import geo
+from unavlib.control import geospatial
 from unavlib import MSPy
 
 class UAVControl:
-    def __init__(self, device, baudrate, drone_type="plane"):
+    def __init__(self, device, baudrate, platform="AIRPLANE"):
         self.debugprint = False
         self.board = MSPy(device=device, loglevel='DEBUG', baudrate=baudrate)  # MSPy instance
         self.run = True
@@ -41,7 +41,7 @@ class UAVControl:
         self.channels = [900] * 16
         self.pwm_range = [1000,2000]
         self.pwm_midpoint = mean(self.pwm_range)
-        self.channels[0] = 1500
+        self.channels[0] = 1500 # bad things happens if sticks not centered
         self.channels[1] = 1500
         self.channels[3] = 1500
         self.modes = {}
@@ -61,6 +61,7 @@ class UAVControl:
         #self.out_queue = asyncio.Queue()
 
         self.voltage = 0
+        self.sensors = {}
         self.attitude = {}
         self.imu = {}
         self.alt = {}
@@ -84,6 +85,9 @@ class UAVControl:
             print('FC Disconnected')
         else:
             print('FC already disconnected')
+
+    def reboot(self): # implement auto-reconnect
+        pass
 
     def std_send(self, msg_code:str, data=[]):
         # wrap the following used literally everywhere in the code
@@ -161,7 +165,7 @@ class UAVControl:
             print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}".format(i[0], modename, ch, ch+5, valmin, valmax))
             self.modes[modename] = [ch+5,[valmin, valmax]]
 
-    def load_modes_config_file(self, mode_config_file):  # add function to get at init
+    def load_modes_config_file(self, mode_config_file): 
         with open(mode_config_file,"r") as file:
             cfg = json.loads(file.read())
         del cfg["board_info"]
@@ -169,50 +173,57 @@ class UAVControl:
 
     def arm_enable_check(self):
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
-        if len(arm_d_flags)>0:
+        if len(arm_d_flags)>0 and arm_d_flags!=['SIMULATOR_MODE']:
             print(f'Cannot Arm, disable flags: {arm_d_flags}')
             return False
         else:
             return True
 
-    def arm(self):
+    def arm(self): # wonky
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
-        check = len(arm_d_flags) == 0
+        if arm_d_flags!=['SIMULATOR_MODE']:
+            check = len(arm_d_flags) == 0
+        else:
+            check = True
         armed = self.board.bit_check(self.board.CONFIG['mode'],0)
         if check and not armed:
             self.set_mode('ARM', True)
             armed = self.board.bit_check(self.board.CONFIG['mode'],0)
+            print(armed)
+
             if armed: 
                 print('### VEHICLE ARMED ###')
             else:
                 print('!!! COULD NOT ARM !!!')
         elif not check:
             print(f'Could not arm, active disable flags: {arm_d_flags}')
+        return armed
 
     def set_mode(self, mode:str, on:bool): # this needs to be more robust to handle when a mode is switched off
-        if mode=='ARM':
-            raise Exception(f"Cannot Arm through set_mode")
-        else:
-            if on and mode not in self.active_modes:
-                modemean = mean(self.modes[mode][1])
-                modech = self.modes[mode][0]-1
-                self.channels[ modech ] = modemean
-                self.active_modes.append(mode)
+        if on and mode not in self.active_modes:
+            modemean = mean(self.modes[mode][1])
+            modech = self.modes[mode][0]-1
+            self.channels[ modech ] = modemean
+            self.active_modes.append(mode)
 
-            elif mode in self.active_modes:
-                self.channels[ self.modes[mode][0]-1 ] = self.mode_range[0]
-                del self.active_modes[self.active_modes.index(mode)]
+        elif mode in self.active_modes:
+            self.channels[ self.modes[mode][0]-1 ] = self.mode_range[0]
+            del self.active_modes[self.active_modes.index(mode)]
 
     def get_active_modes(self):
         # re-do this to just find active modes from current RC channel values
         # also flags, how do they work
 
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
+        ret = self.active_modes
+        for i in boardmodes:
+            if i not in ret:
+                ret.append(i)
         #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
         #for i in self.active_modes:
         #    if i not in excluded and i not in boardmodes:
         #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
-        return self.active_modes
+        return ret
 
     def new_supermode(self, name:str, modes:list):
         for i in modes:
@@ -246,7 +257,7 @@ class UAVControl:
     def get_sensor_config(self):
         ret = self.std_send('MSP_SENSOR_CONFIG')
         if ret:
-            return {
+            self.sensors = {
                     'acc_hardware': self.board.R_accelerationSensor[self.board.SENSOR_CONFIG['acc_hardware']], 
                     'baro_hardware': self.board.R_baroSensor[self.board.SENSOR_CONFIG['baro_hardware']], 
                     'mag_hardware': self.board.R_magSensor[self.board.SENSOR_CONFIG['mag_hardware']],
@@ -254,6 +265,7 @@ class UAVControl:
                     'rangefinder': self.board.R_rangefinderType[self.board.SENSOR_CONFIG['rangefinder']], 
                     'opflow': self.board.R_opticalFlowSensor[self.board.SENSOR_CONFIG['opflow']]
                 }
+            return self.sensors
         else:
             return None
 
@@ -261,26 +273,29 @@ class UAVControl:
         # Request, read and process the ATTITUDE (Roll, Pitch and Yaw in degrees)
         ret = self.std_send('MSP_ATTITUDE')
         if ret:
-            return {"pitch": self.board.SENSOR_DATA['kinematics'][1],
-                    "yaw": self.board.SENSOR_DATA['kinematics'][2],
-                    "roll": self.board.SENSOR_DATA['kinematics'][0]}
+            self.attitude = {"pitch": self.board.SENSOR_DATA['kinematics'][1],
+                        "yaw": self.board.SENSOR_DATA['kinematics'][2],
+                        "roll": self.board.SENSOR_DATA['kinematics'][0]}
+            return self.attitude
     
     def get_altitude(self):
         ret = self.std_send("MSP_ALTITUDE")
         if ret:
-            return self.board.SENSOR_DATA['altitude']
+            self.alt = self.board.SENSOR_DATA['altitude']
+            return self.alt
 
     def get_imu(self):
         ret = self.stf_send('MSP_RAW_IMU')
         if ret:
-            return {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
+            self.imu = {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
                     "gyroscope": self.board.SENSOR_DATA['gyroscope'],
                     "magnetometer": self.board.SENSOR_DATA['magnetometer']}
+            return self.imu
 
     def get_nav_status(self):
         ret = self.std_send('MSP_NAV_STATUS')
         if ret:
-            return {
+            self.nav_status = {
                 "mode": self.board.R_navSystemStatus_Mode[self.board.NAV_STATUS['mode']],
                 "state": self.board.R_navSystemStatus_State[self.board.NAV_STATUS['state']],
                 "wp_action": self.board.NAV_STATUS['active_wp_action'],
@@ -288,6 +303,7 @@ class UAVControl:
                 "error": self.board.R_navSystemStatus_Error[self.board.NAV_STATUS['error']],
                 "heading_hold_tgt": self.board.NAV_STATUS['heading_hold_target']
             }
+            return self.nav_status
 
     def get_gps_data(self):
         a = self.std_send('MSP_RAW_GPS')
@@ -394,10 +410,12 @@ class UAVControl:
 
             slow_msgs = cycle(['MSP_ANALOG', 'MSP_STATUS_EX', 'MSP_MOTOR', 'MSP_RC'])
 
+            ncycle = 0
             last_loop_time = last_slow_msg_time = last_cycleTime = time.time()
             print('\n### Flight Control loop started ###')
             while self.run:
-                #if self.debugprint: print('\n########################################')
+                if self.debugprint: print(f'\n################## CYCLE {ncycle} ######################')
+                ncycle+=1
                 start_time = time.time()
                 #
                 # IMPORTANT MESSAGES (CTRL_LOOP_TIME based)
@@ -436,6 +454,7 @@ class UAVControl:
 
                     elif next_msg == 'MSP_RC':
                         if self.debugprint: print("RC Channels: ", self.board.RC['channels'])
+                        if self.debugprint: print(self.channels)
                         
 
                 end_time = time.time()

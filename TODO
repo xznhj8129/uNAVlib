@@ -2,22 +2,41 @@
 
 - Mode handling a bit of a mess, learn how the binary flags work and fix mismatch 
 
+- Leave code translation in UAVControl, or translate directly in MSPy?
+
+- MSPy refactor part 2
+    1. put enums and vars seperated in proper place within MSPy
+    2. 
+
 - Test proxy and make it work
 
-- Implement missing necessary MSP messages
-    MSP messages not implemented in YAMSPy:
+- Implement missing necessary MSP messages in process.py
+    Priority messages to implement:
+        MSP_ACTIVEBOXES
+        MSP_WP
+        MSP_WP_MISSION_LOAD
+        MSP_WP_MISSION_SAVE
+        MSP_WP_GETINFO
+        MSP_NAV_CONFIG
+        MSP_SET_WP
+        MSP_SET_HEAD
+        MSP_SET_HEADING
+        MSP_SONAR_ALTITUDE
+        MSP_NAV_POSHOLD
+        MSP2_INAV_AIR_SPEED
+        MSP2_INAV_GLOBAL_FUNCTIONS
+        MSP2_INAV_GVAR_STATUS
+        MSP2_INAV_LOGIC_CONDITIONS_STATUS
+
+    Other MSP messages not implemented in YAMSPy:
         MSP_PROTOCOL_VERSION
         MSP_INAV_PID
         MSP_SET_INAV_PID
-        MSP_NAV_POSHOLD
         MSP_SET_NAV_POSHOLD
         MSP_CALIBRATION_DATA
         MSP_SET_CALIBRATION_DATA
         MSP_POSITION_ESTIMATION_CONFIG
         MSP_SET_POSITION_ESTIMATION_CONFIG
-        MSP_WP_MISSION_LOAD
-        MSP_WP_MISSION_SAVE
-        MSP_WP_GETINFO
         MSP_RTH_AND_LAND_CONFIG
         MSP_SET_RTH_AND_LAND_CONFIG
         MSP_FW_CONFIG
@@ -26,8 +45,6 @@
         MSP_SET_LED_COLORS
         MSP_LED_STRIP_CONFIG
         MSP_SET_LED_STRIP_CONFIG
-        MSP_SONAR_ALTITUDE
-        MSP_REBOOT
         MSP_DATAFLASH_READ
         MSP_TRANSPONDER_CONFIG
         MSP_SPECIAL_PARAMETERS
@@ -37,17 +54,11 @@
         MSP_DISPLAYPORT
         MSP_SET_TX_INFO
         MSP_TX_INFO
-        MSP_ACTIVEBOXES
-        MSP_MOTOR_PINS
-        MSP_WP
-        MSP_NAV_CONFIG
         MSP_3D
         MSP_LED_STRIP_MODECOLOR
         MSP_SET_RAW_GPS
         MSP_SET_BOX
         MSP_SET_MISC
-        MSP_SET_WP
-        MSP_SET_HEAD
         MSP_SET_NAV_CONFIG
         MSP_SET_3D
         MSP_SET_LED_STRIP_MODECOLOR
@@ -79,7 +90,6 @@
         MSP2_INAV_SET_BATTERY_CONFIG
         MSP2_INAV_RATE_PROFILE
         MSP2_INAV_SET_RATE_PROFILE
-        MSP2_INAV_AIR_SPEED
         MSP2_INAV_OUTPUT_MAPPING
         MSP2_INAV_MC_BRAKING
         MSP2_INAV_SET_MC_BRAKING
@@ -100,12 +110,9 @@
         MSP_SIMULATOR
         MSP2_INAV_SERVO_MIXER
         MSP2_INAV_SET_SERVO_MIXER
-        MSP2_INAV_LOGIC_CONDITIONS
         MSP2_INAV_SET_LOGIC_CONDITIONS
-        MSP2_INAV_GLOBAL_FUNCTIONS
         MSP2_INAV_SET_GLOBAL_FUNCTIONS
-        MSP2_INAV_LOGIC_CONDITIONS_STATUS
-        MSP2_INAV_GVAR_STATUS
+        MSP2_INAV_LOGIC_CONDITIONS
         MSP2_INAV_PROGRAMMING_PID
         MSP2_INAV_SET_PROGRAMMING_PID
         MSP2_INAV_PROGRAMMING_PID_STATUS
@@ -140,11 +147,11 @@
         MSP_CALCULATE_SIMPLIFIED_GYRO
         MSP_CALCULATE_SIMPLIFIED_DTERM
         MSP_VALIDATE_SIMPLIFIED_TUNING
-        MSP_SET_HEADING
         MSP_SET_GPS_RESCUE
         MSP_SET_GPS_RESCUE_PIDS
         MSP_SET_VTXTABLE_BAND
         MSP_SET_VTXTABLE_POWERLEVEL
+        MSP_MOTOR_PINS
         MSP_MULTIPLE_MSP
         MSP_SET_BOARD_INFO
         MSP_SET_SIGNATURE
@@ -159,4 +166,4 @@
         MSP_NAV_STATUS
 
     Ignored:
-        
+        to be figured out

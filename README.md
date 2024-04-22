@@ -5,24 +5,48 @@ uNAV as in Unmanned INAV, or "u do the nav, i'm busy".\
 Fork of the now-inactive [YAMSPy](https://github.com/thecognifly/YAMSPy) library (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface), created by Ricardo de Azambuja; (specifically the [yb/stablle branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable)). It is an SDK meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware, flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
 
 ## Why?
-I happened to try INAV first and liked it, Ardupilot is way more capable, but also far more complex, and does not support as many boards as INAV, which is a fork of Betaflight. Developing INAV's autonomous capabilities and MSP's functionality so it compares more to MAVLink would open up a lot of interesting options for those who use it. I forked and renamed it because i'm probably going to completely change it, Betaflight will not be supported.
+I happened to try INAV first and liked it, Ardupilot is way more capable, but also far more complex, and does not support as many boards as INAV, which is a fork of Betaflight. Developing INAV's autonomous capabilities and MSP's functionality so it compares more to MAVLink would open up a lot of interesting options for those who use it. I forked and renamed it because i'm probably going to completely change it. Betaflight will not be supported.
 
 ## Disclaimer ## 
-I am a complete beginner at flight control software. AI will be used to develop it in parts when convenient. Caveat emptor. Use at your own and other's risk. This experimental work is provided to you as-is, with no guarantees whatsoever. Unexpected, spurious, undefined and unexplicable actions, failure states and malfunctions must be expected at any time for any reason, and it's safe, legal and responsible use to control drones/UAVs is the responsibility of the user. None of the authors, contributors, supervisors administrators, employers, friends, family, vandals, or anyone else connected (or not) with this project, in any way whatsoever, can be made responsible for the use of the information (code) contained or linked from here. Matthew 27:24.
+This library is in active development and may change quickly, with no guarantees to back-compatibility or proper version control. I am a complete beginner at flight control software. AI will be used to develop it in parts when convenient. Caveat emptor. Use at your own and other's risk. This experimental work is provided to you as-is, with no guarantees whatsoever. Unexpected, spurious, undefined and unexplicable actions, failure states and malfunctions must be expected at any time for any reason, and it's safe, legal and responsible use to control drones/UAVs is the responsibility of the user. None of the authors, contributors, supervisors administrators, employers, friends, family, vandals, or anyone else connected (or not) with this project, in any way whatsoever, can be made responsible for the use of the information (code) contained or linked from here. Matthew 27:24.
 
 ## New Features ##
-* YAMSPy monster __init__ class refactored and split into modules
+* Asyncio-based flight controller class object with simplified functions for easy mission scripting
+* YAMSPy monster \__init__ class refactored and split into modules
 * enums extracted from INAV source into dictionary imports for mapping and simpler programming
-* tools.generate_mode_config: creates json file with FC's modes mapped to their name, channel and range
-* tools.generate_msp_override_bitmask: outputs command to set right MSP Channel Overrides
-* tools.src_enum_printer: prints enums from inav header files
+* geographic functions for navigation
+
+## Planned features:
+* Mission Control object using asyncio
+* PID-based flight control
+* Automated tests
+* Implement/reproduce [MWPtools](https://github.com/stronnag/mwptools) functionality and tools
+* Mavlink compatibility if possible (direct INAV source contribution might be much better)
+* Failure mode tests and failsafes
+* C++ implementation
 
 ## Utilities
-* tools.gen_mode_config: Connects to your board and generates json file containing basic board info and mappings of your aux modes configuration for easier scripting.\
+* tools.gen_mode_config: Connects to your board and generates json file containing basic board info and mappings of your aux modes configuration for easier scripting.
 * tools.gen_msp_override_bitmask: Generates the correct channel bitmask for MSP override.
+* tools.generate_inav_enums: reads INAV source files to generate enums/inav_enums.py
+* tools.generate_msp_override_bitmask: outputs command to set right MSP Channel Overrides
+
+## TODO:
+See [TODO](/TODO)
+
+## DONE:
+* First example of asyncio-based mission control
+* Refactor __init__.py into more manageable structure
+* Import all INAV enums into dictionaries
+* Generate enums automatically from INAV source
 
 ## Examples
 [Examples](/examples) (more examples will come as main codebase improves, old YAMSPy examples may break)
+
+## Software Requirements:
+* Python >= 3.10
+* INAV >= 7.1
+* asyncio >= 3.4.3
 
 ## MSP Override
 See https://codeberg.org/stronnag/msp_override \
@@ -49,30 +73,6 @@ If you can't connect (talk) to the FC:
 3. Verify the devices available using ```ls -lh /dev/serial*``` (or dev/ttyUSB* / dev/ttyACM*) and change it in the Python script if needed.
 4. Turn it off and on again
 
-## Planned features:
-* Mission Control object using asyncio
-* Automated tests
-* Mavlink compatibility
-* Failure mode tests and failsafes
-* C++ implementation
-
-## TODO:
-* Write documentation
-* Write missing process_MSP functions
-* Write functions that take and return **STRINGS AND JSON** from enum mapping instead of raw bytes and integers to MASSIVELY simplify development and usage
-* Implement/reproduce [MWPtools](https://github.com/stronnag/mwptools) functionality and tools
-
-## DONE:
-* Refactor __init__.py into more manageable structure
-* Import all INAV enums into dictionaries
-* Generate enums automatically from INAV source
-
-## Software Requirements:
-* Python >= 3.10
-* INAV >= 7.1
-* asyncio >= 3.4.3
-
-
 ## Installation:
 Option #1: Clone the repo so you will have the examples
 ```
@@ -96,6 +96,9 @@ On Linux you may need to add your user to the dialout group:
 ```
 $ sudo usermod -a -G dialout $USER
 ```
+
+## Contributions:
+All are welcome and encouraged to contribute!
 
 ## Acknowledgments:
 [Ricardo de Azambuja](https://github.com/ricardodeazambuja), [Tom](https://github.com/cmftom), [Yann](https://github.com/yannbouteiller), the [Cognifly Project](https://github.com/thecognifly/) and all other contributors for developing the original YAMSPy library.\

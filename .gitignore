@@ -112,6 +112,9 @@ notes.txt
 original__init__.py
 old_readme.md
 diagram.drawio
+.$diagram.drawio.dtmp
+/docs
+Doxyfile
 
 # user-specific stuff
 modes.json
