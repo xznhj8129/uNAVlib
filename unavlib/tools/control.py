@@ -86,6 +86,7 @@ class UAVControl:
             print('FC already disconnected')
 
     def std_send(self, msg_code:str, data=[]):
+        # wrap the following used literally everywhere in the code
         if self.board.send_RAW_msg(self.board.MSPCodes[msg_code], data=data, blocking=None, timeout=None, flush=False):
             dataHandler = self.board.receive_msg()
             self.board.process_recv_data(dataHandler)
@@ -204,11 +205,13 @@ class UAVControl:
 
     def get_active_modes(self):
         # re-do this to just find active modes from current RC channel values
+        # also flags, how do they work
+
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
-        excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
-        for i in self.active_modes:
-            if i not in excluded and i not in boardmodes:
-                raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
+        #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
+        #for i in self.active_modes:
+        #    if i not in excluded and i not in boardmodes:
+        #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
         return self.active_modes
 
     def new_supermode(self, name:str, modes:list):
@@ -328,7 +331,6 @@ class UAVControl:
                                 p3, 
                                 flag)
         ret = self.std_send('MSP_SET_WP', data=msp_wp)
-        print(ret)
         if len(ret['dataView'])>0:
             return self.unpack_msp_wp(ret['dataView']) # parse me
 
@@ -341,9 +343,8 @@ class UAVControl:
 
             # load modes here
             #self.load_modes_config_file('modes.json')
-            self.load_modes_config() #
+            self.load_modes_config()
             self.msp_override = "MSP RC OVERRIDE" in self.modes
-            #print(self.modes, self.msp_override)
             
             # default simpleUI values, to be set in another way
             CTRL_LOOP_TIME = 1/100 
