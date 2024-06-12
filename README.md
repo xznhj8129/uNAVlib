@@ -2,7 +2,7 @@
 **[Version: 0.1.1](CHANGELOG)**\
 \
 uNAV as in Unmanned INAV, or "u do the nav, i'm busy".\
-Fork of the now-inactive [YAMSPy](https://github.com/thecognifly/YAMSPy) library (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface), created by Ricardo de Azambuja; (specifically the [yb/stablle branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable)). It is an SDK meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware, flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
+Fork of the now-inactive [YAMSPy](https://github.com/thecognifly/YAMSPy) library (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface), created by Ricardo de Azambuja; (specifically the [yb/stablle branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable)). It is an SDK meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc; basically allowing MAVSDK/Dronekit-like development for INAV. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware, flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
 
 ## Why?
 I happened to try INAV first and liked it, Ardupilot is way more capable, but also far more complex, and does not support as many boards as INAV, which is a fork of Betaflight. Developing INAV's autonomous capabilities and MSP's functionality so it compares more to MAVLink would open up a lot of interesting options for those who use it. I forked and renamed it because i'm probably going to completely change it. Betaflight will not be supported.
@@ -47,6 +47,10 @@ See [TODO](/TODO)
 * Python >= 3.10
 * INAV >= 7.1
 * asyncio >= 3.4.3
+* simple-pid
+* geographiclib
+* mgrs
+* geojson
 
 ## MSP Override
 See https://codeberg.org/stronnag/msp_override \
@@ -56,7 +60,7 @@ Allows MSP protocol to override RC channels coming from a transmitter, allowing 
 * Flight mode `MSP RC Override` is active.
 
 ## Proxy
-This fork's starting point is the [yb/stable branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use YAMSPy in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
+This fork's starting point is the [yb/stable branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use unavlib in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
 
 ```
 $ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330

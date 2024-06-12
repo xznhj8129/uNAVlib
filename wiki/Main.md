@@ -7,11 +7,11 @@ Here you will find reference on how to use this library and documentation on the
 ```
 import asyncio
 import time
-from unavlib.tools.control import UAVControl
+from unavlib.control import UAVControl
 
 async def my_plan(uav):
     uav.arm_enable_check()
-    uav.arm()
+    uav.set_mode("ARM",on=True)
     await asyncio.sleep(1)
     print(uav.get_gps_data())
     await asyncio.sleep(1)

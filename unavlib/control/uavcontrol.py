@@ -14,6 +14,7 @@ from select import select
 from threading import Lock, RLock
 from statistics import mean
 from concurrent.futures import ThreadPoolExecutor
+from simple_pid import PID
 
 from unavlib.enums import inav_enums
 from unavlib.enums.msp_codes import MSPCodes
@@ -29,9 +30,9 @@ from unavlib.control import geospatial
 from unavlib import MSPy
 
 class UAVControl:
-    def __init__(self, device, baudrate, platform="AIRPLANE"):
+    def __init__(self, device, baudrate, use_tcp=False, platform="AIRPLANE"):
         self.debugprint = False
-        self.board = MSPy(device=device, loglevel='DEBUG', baudrate=baudrate)  # MSPy instance
+        self.board = MSPy(device=device, loglevel='DEBUG', use_tcp=use_tcp, baudrate=baudrate)  # MSPy instance
         self.run = True
         self.connected = None
         self.device = device
@@ -98,8 +99,8 @@ class UAVControl:
         else:
             return None
 
-    def add_pid(self, pidname:str, Kp=0.1, Ki=0.01, Kd=0.05, setpoint=0, output_limits=(0, 1)):
-        self.pids[pidname] = PID(Kp=Kp, Ki=Ki, Kd=Kd, setpoint=setpoint, output_limits=output_limits)
+    def add_pid(self, pidname:str, Kp=0.1, Ki=0.01, Kd=0.05, setpoint=0, starting_output=0, output_limits=(0, 1)):
+        self.pids[pidname] = PID(Kp=Kp, Ki=Ki, Kd=Kd, setpoint=setpoint, starting_output=starting_output, output_limits=output_limits)
 
     def update_pid(self, pidname:str, error:float):
         return self.pids[pidname](error)
@@ -200,13 +201,15 @@ class UAVControl:
         return armed
 
     def set_mode(self, mode:str, on:bool): # this needs to be more robust to handle when a mode is switched off
-        if on and mode not in self.active_modes:
+        if on and mode not in self.get_active_modes():
+            print(mode,'on')
             modemean = mean(self.modes[mode][1])
             modech = self.modes[mode][0]-1
             self.channels[ modech ] = modemean
             self.active_modes.append(mode)
 
-        elif mode in self.active_modes:
+        elif not on and mode in self.get_active_modes():
+            print(mode,'off')
             self.channels[ self.modes[mode][0]-1 ] = self.mode_range[0]
             del self.active_modes[self.active_modes.index(mode)]
 
@@ -215,15 +218,11 @@ class UAVControl:
         # also flags, how do they work
 
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
-        ret = self.active_modes
-        for i in boardmodes:
-            if i not in ret:
-                ret.append(i)
         #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
         #for i in self.active_modes:
         #    if i not in excluded and i not in boardmodes:
         #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
-        return ret
+        return  boardmodes#self.active_modes
 
     def new_supermode(self, name:str, modes:list):
         for i in modes:
@@ -258,12 +257,12 @@ class UAVControl:
         ret = self.std_send('MSP_SENSOR_CONFIG')
         if ret:
             self.sensors = {
-                    'acc_hardware': self.board.R_accelerationSensor[self.board.SENSOR_CONFIG['acc_hardware']], 
-                    'baro_hardware': self.board.R_baroSensor[self.board.SENSOR_CONFIG['baro_hardware']], 
-                    'mag_hardware': self.board.R_magSensor[self.board.SENSOR_CONFIG['mag_hardware']],
-                    'pitot': self.board.R_pitotSensor[self.board.SENSOR_CONFIG['pitot']],
-                    'rangefinder': self.board.R_rangefinderType[self.board.SENSOR_CONFIG['rangefinder']], 
-                    'opflow': self.board.R_opticalFlowSensor[self.board.SENSOR_CONFIG['opflow']]
+                'acc_hardware': self.board.R_accelerationSensor[self.board.SENSOR_CONFIG['acc_hardware']], 
+                'baro_hardware': self.board.R_baroSensor[self.board.SENSOR_CONFIG['baro_hardware']], 
+                'mag_hardware': self.board.R_magSensor[self.board.SENSOR_CONFIG['mag_hardware']],
+                'pitot': self.board.R_pitotSensor[self.board.SENSOR_CONFIG['pitot']],
+                'rangefinder': self.board.R_rangefinderType[self.board.SENSOR_CONFIG['rangefinder']], 
+                'opflow': self.board.R_opticalFlowSensor[self.board.SENSOR_CONFIG['opflow']]
                 }
             return self.sensors
         else:
@@ -353,7 +352,6 @@ class UAVControl:
 
     async def flight_loop(self):
         try:
-
             if self.board == 1: # an error occurred...
                 return 1
 

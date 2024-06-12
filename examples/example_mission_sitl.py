@@ -20,6 +20,7 @@ from unavlib.control import geospatial
 
 async def my_plan(uav):
 
+    uav.set_mode("ARM", on=False)
     uav.debugprint = False
     #uav.modes.keys() # show all currently programmed modes
     # create new supermode (combination of multiple modes)
@@ -28,7 +29,12 @@ async def my_plan(uav):
     uav.set_mode("MSP RC OVERRIDE", on=True)
     uav.set_mode("ANGLE", on=True)
     #await asyncio.sleep(3)
-    uav.arm_enable_check()
+    
+    uav.arm_enable_check() #fails in SITL 
+    #result.append(self.mspy.R_armingDisableFlagNames_INAV[bitpos])
+    #             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+    #KeyError: 5
+
     await asyncio.sleep(1)
     uav.set_mode("ARM", on=True)
     await asyncio.sleep(1)
@@ -40,7 +46,7 @@ async def my_plan(uav):
     t=0
     while uavalt<2:
         uav.set_rc_channel('throttle',2000)
-        uav.set_rc_channel('pitch',1300)
+        uav.set_rc_channel('pitch',1000)
         uavspeed = uav.get_gps_data()['speed']
         uavalt = uav.get_altitude()
         print('Speed:', uavspeed,'Alt:', uavalt)
@@ -102,7 +108,7 @@ async def my_plan(uav):
 
 
 async def main():
-    mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
+    mydrone = UAVControl(device='5761', baudrate=115200, use_tcp=True, platform="AIRPLANE")
     mydrone.msp_override_channels=[1, 2, 3, 4, 5, 6, 12, 13, 14]
 
     try:

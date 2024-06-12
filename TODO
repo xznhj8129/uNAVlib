@@ -8,6 +8,14 @@
     1. put enums and vars seperated in proper place within MSPy
     2. 
 
+- More flight control modes:
+    Heading hold + adjust
+    Alt hold + adjust
+
+- PID control
+
+- Mission file import function
+
 - Test proxy and make it work
 
 - Implement missing necessary MSP messages in process.py
