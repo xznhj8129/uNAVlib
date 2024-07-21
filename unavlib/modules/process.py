@@ -418,6 +418,7 @@ class processMSP():
 
         for i in range(len(data)):
             self.mspy.AUX_CONFIG_IDS.append(self.mspy.readbytes(data, size=8, unsigned=True))
+        print(self.mspy.AUX_CONFIG_IDS)
 
     def process_MSP_SERVO_CONFIGURATIONS(self, data):
         self.mspy.SERVO_CONFIG = [] # empty the array as new data is coming in

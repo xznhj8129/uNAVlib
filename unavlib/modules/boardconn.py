@@ -2,6 +2,7 @@
 from ..modules import msp_ctrl
 from ..enums import msp_codes
 from ..enums import msp_vars
+from ..enums import inav_enums
 
 from serial import SerialException
 import logging
@@ -176,9 +177,12 @@ class connMSP():
         """Translate the value from CONFIG['mode']
         """
         result = []
-        for i in range(len(self.mspy.AUX_CONFIG)):
+        #for i in self.mspy.R_modesID_INAV:
+        #    print(i)
+        for i in range(len(self.mspy.AUX_CONFIG_IDS)):
             if (self.bit_check(flag, i)):
-                result.append(self.mspy.AUX_CONFIG[i])
+                #print(i, True)
+                result.append(self.mspy.R_modesID_INAV[self.mspy.AUX_CONFIG_IDS[i]])
         return result
 
 
@@ -328,9 +332,10 @@ class connMSP():
             logging.debug("dataHandler has a packet_error.")
             return -3
         else:
-
+            #print("process_" + self.mspy.R_MSPCodes[code])
             if (not dataHandler['unsupported']):
                 processor = getattr(self.mspy, "process_" + self.mspy.R_MSPCodes[code], None)
+                
                 if processor: # if nothing is found, should be None
                     try:
                         if data:

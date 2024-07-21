@@ -56,7 +56,7 @@ See [TODO](/TODO)
 See https://codeberg.org/stronnag/msp_override \
 Allows MSP protocol to override RC channels coming from a transmitter, allowing use of both an RC transmitter and MSP control via CC.
 * Firmware must be built with  `USE_MSP_RC_OVERRIDE` (un-comment in `src/main/target/common.h` or append to `src/main/target/TARGET_NAME/target.h`).
-* The override mask `msp_override_channels` is set for the channels to be overridden by entering `set msp_override_channels =  (your bitmask here, see utils)` in the CLI.
+* The override mask `msp_override_channels` is set for the channels to be overridden by entering `set msp_override_channels =  (your bitmask here` in the CLI. (see unavlib/tools/generate_msp_override_bitmask.py to generate the correct one)
 * Flight mode `MSP RC Override` is active.
 
 ## Proxy

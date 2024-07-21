@@ -52,6 +52,8 @@ class UAVControl:
         self.supermodes = {}
         self.active_supermodes = []
         self.pids = {}
+        self.msp_receiver = False
+        self.override_active = False
         self.msp_override_channels = []
         self.mspy_min_time_between_writes = 1/100
         self.mspy_loglevel='INFO'
@@ -216,6 +218,7 @@ class UAVControl:
     def get_active_modes(self):
         # re-do this to just find active modes from current RC channel values
         # also flags, how do they work
+        # it works?????
 
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
         #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
@@ -380,7 +383,7 @@ class UAVControl:
                             'MSP_STATUS_EX',
                             'MSP_BATTERY_CONFIG', 
                             'MSP_BATTERY_STATE', 
-                            'MSP_BOXNAMES', 
+                            #'MSP_BOXIDS',  #instead of MSP_BOXNAMES
                             'MSP2_INAV_STATUS', 
                             'MSP2_INAV_ANALOG',
                             'MSP_VOLTAGE_METER_CONFIG',
