@@ -26,10 +26,10 @@ This library is in active development and may change quickly, with no guarantees
 * C++ implementation
 
 ## Utilities
+* tools.generate_msp_override_bitmask: Generates the correct channel bitmask for MSP override.
 * tools.gen_mode_config: Connects to your board and generates json file containing basic board info and mappings of your aux modes configuration for easier scripting.
-* tools.gen_msp_override_bitmask: Generates the correct channel bitmask for MSP override.
 * tools.generate_inav_enums: reads INAV source files to generate enums/inav_enums.py
-* tools.generate_msp_override_bitmask: outputs command to set right MSP Channel Overrides
+* tools.generate_msp_codes: reads INAV source files to generate enums/msp_codes.py
 
 ## TODO:
 See [TODO](/TODO)
@@ -59,23 +59,23 @@ Allows MSP protocol to override RC channels coming from a transmitter, allowing 
 * The override mask `msp_override_channels` is set for the channels to be overridden by entering `set msp_override_channels =  (your bitmask here` in the CLI. (see unavlib/tools/generate_msp_override_bitmask.py to generate the correct one)
 * Flight mode `MSP RC Override` is active.
 
-## Proxy
-This fork's starting point is the [yb/stable branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use unavlib in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
-
-```
-$ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330
-```
-In your script using unavlib you need to set `use_tcp=True` and pass the port number as the device. Check the script [`simpleUI_tcp.py`](/examples/simpleUI_tcp.py) in the `examples` folder.
-
 ## Setting up your flight controller (FC):
-Follow standard INAV setup procedures. This project starts with INAV 7.1 as basis. Set up MSP telemtry UART port to connect to.
+This project starts with INAV 7.1 as basis. 
+1. Build the firmware with MSP_RC_OVERRIDE and flash
+2. Follow standard INAV setup procedures.
+3. Set up MSP telemtry UART port to connect to.
+4. Connect telemetry port to your Pi's UART or to a USB-TTL converter (ex: CP2102)
+5. Test connection by connecting to FC with Inav configurator using that serial connection (ex: /dev/ttyUSB0)
+6. 
 
 ## Troubleshooting
 If you can't connect (talk) to the FC:
 1. Check if you enabled MSP in the correct UART using INAV-configurator
 2. Make sure you connected the cables correctly: TX => RX and RX => TX
-3. Verify the devices available using ```ls -lh /dev/serial*``` (or dev/ttyUSB* / dev/ttyACM*) and change it in the Python script if needed.
-4. Turn it off and on again
+3. Verify the devices available using ```ls -lh /dev/serial*``` (or dev/ttyUSB* / dev/ttyACM*)
+4. Verify your wireless connection if using telemetry radios or similar (i haven't tried')
+5. Turn it off and on again
+6. Appease the machine-spirit
 
 ## Installation:
 Option #1: Clone the repo so you will have the examples
@@ -100,6 +100,14 @@ On Linux you may need to add your user to the dialout group:
 ```
 $ sudo usermod -a -G dialout $USER
 ```
+
+## Proxy
+This fork's starting point is the [yb/stable branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable) of YAMSPy that has a new, experimental, script that allows you to play with MSP messages like you would do with [MAVProxy](https://ardupilot.org/mavproxy/). This proxy will allow many scripts to share the same UART connected to the FC. Then, you can use unavlib in TCP mode (`use_tcp=True`) to connect to the FC using one of the ports created by the proxy (only one connection per port since it's TCP). To launch the proxy creating the ports `54310`, `54320`, and `54330`:
+
+```
+$ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330
+```
+In your script using unavlib you need to set `use_tcp=True` and pass the port number as the device. Check the script [`simpleUI_tcp.py`](/examples/simpleUI_tcp.py) in the `examples` folder.
 
 ## Contributions:
 All are welcome and encouraged to contribute!

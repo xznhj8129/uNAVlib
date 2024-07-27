@@ -21,7 +21,7 @@ else:
 
 class connMSP():
     def __init__(self, mspy_instance):
-        self.mspy = mspy_instance
+        self.board = mspy_instance
     
     def connect(self, trials=100, delay=0.5):
         """Opens the serial connection with the board
@@ -42,19 +42,19 @@ class connMSP():
 
         for _ in range(trials):
             try:
-                if self.mspy.use_tcp:
-                    self.mspy.start(port=int(self.mspy.device), timeout=self.mspy.timeout)
+                if self.board.use_tcp:
+                    self.board.start(port=int(self.board.device), timeout=self.board.timeout)
                 else:
-                    self.mspy.start()
+                    self.board.start()
 
                 self.basic_info()
                 return 0
                 
             except SerialException as err:
-                logging.warning(f"Error opening the serial port ({self.mspy.device}): {err}")
+                logging.warning(f"Error opening the serial port ({self.board.device}): {err}")
             
             except FileNotFoundError as err:
-                logging.warning(f"Port ({self.mspy.device}) not found: {err}")
+                logging.warning(f"Port ({self.board.device}) not found: {err}")
 
             time.sleep(delay)
         
@@ -65,29 +65,29 @@ class connMSP():
         """Basic info about the flight controller to distinguish between the many flavours.
         """
         msg = 'MSP_API_VERSION'
-        while self.mspy.CONFIG['apiVersion'] == '0.0.0':
+        while self.board.CONFIG['apiVersion'] == '0.0.0':
             print(f"Waiting for {msg} reply...")
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.mspy.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
 
         msg = 'MSP_FC_VARIANT'
-        while self.mspy.CONFIG['flightControllerIdentifier'] == '':
+        while self.board.CONFIG['flightControllerIdentifier'] == '':
             print(f"Waiting for {msg} reply...")
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.mspy.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
 
-        if 'INAV' in self.mspy.CONFIG['flightControllerIdentifier']:
-            self.mspy.INAV = True
+        if 'INAV' in self.board.CONFIG['flightControllerIdentifier']:
+            self.board.INAV = True
 
         basic_info_cmd_list = ['MSP_FC_VERSION', 'MSP_BUILD_INFO', 'MSP_BOARD_INFO', 'MSP_UID', 
                                'MSP_ACC_TRIM', 'MSP_NAME', 'MSP_STATUS', 'MSP_STATUS_EX', 'MSP_ANALOG']
-        if self.mspy.INAV:
+        if self.board.INAV:
             basic_info_cmd_list.append('MSP2_INAV_ANALOG')
             basic_info_cmd_list.append('MSP_VOLTAGE_METER_CONFIG')
             basic_info_cmd_list.append('MSP2_INAV_STATUS')
@@ -95,27 +95,27 @@ class connMSP():
         for msg in basic_info_cmd_list:
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.mspy.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
     
-        print(self.mspy.CONFIG)
+        print(self.board.CONFIG)
 
         
     def receive_raw_msg(self, size, timeout = 10):
         current_write = time.time()
-        if (current_write-self.mspy.last_write) < self.mspy.min_time_between_writes:
-            time.sleep(max(self.mspy.min_time_between_writes-(current_write-self.mspy.last_write),0))
-        with self.mspy.port_read_lock:
-            return msp_ctrl.receive_raw_msg(self.mspy.read, logging, self.mspy.timeout_exception, size, timeout)
+        if (current_write-self.board.last_write) < self.board.min_time_between_writes:
+            time.sleep(max(self.board.min_time_between_writes-(current_write-self.board.last_write),0))
+        with self.board.port_read_lock:
+            return msp_ctrl.receive_raw_msg(self.board.read, logging, self.board.timeout_exception, size, timeout)
 
 
     def receive_msg(self):
         current_write = time.time()
-        if (current_write-self.mspy.last_write) < self.mspy.min_time_between_writes:
-            time.sleep(max(self.mspy.min_time_between_writes-(current_write-self.mspy.last_write),0))
-        with self.mspy.port_read_lock:
-            return msp_ctrl.receive_msg(self.mspy.read, logging)
+        if (current_write-self.board.last_write) < self.board.min_time_between_writes:
+            time.sleep(max(self.board.min_time_between_writes-(current_write-self.board.last_write),0))
+        with self.board.port_read_lock:
+            return msp_ctrl.receive_msg(self.board.read, logging)
 
 
     @staticmethod
@@ -169,7 +169,7 @@ class connMSP():
         while (flags):
             bitpos = ffs(flags) - 1
             flags &= ~(1 << bitpos)
-            result.append(self.mspy.R_armingDisableFlagNames_INAV[bitpos])
+            result.append(self.board.R_armingDisableFlagNames_INAV[bitpos])
         return result
 
     # why does this not show active modes?
@@ -177,12 +177,10 @@ class connMSP():
         """Translate the value from CONFIG['mode']
         """
         result = []
-        #for i in self.mspy.R_modesID_INAV:
-        #    print(i)
-        for i in range(len(self.mspy.AUX_CONFIG_IDS)):
+        for i in range(len(self.board.AUX_CONFIG_IDS)):
             if (self.bit_check(flag, i)):
                 #print(i, True)
-                result.append(self.mspy.R_modesID_INAV[self.mspy.AUX_CONFIG_IDS[i]])
+                result.append(self.board.R_modesID_INAV[self.board.AUX_CONFIG_IDS[i]])
         return result
 
 
@@ -194,9 +192,9 @@ class connMSP():
     def serialPortFunctionMaskToFunctions(self, functionMask):
         functions = []
 
-        keys = self.mspy.SERIAL_PORT_FUNCTIONS.keys()
+        keys = self.board.SERIAL_PORT_FUNCTIONS.keys()
         for key in keys:
-            bit = self.mspy.SERIAL_PORT_FUNCTIONS[key]
+            bit = self.board.SERIAL_PORT_FUNCTIONS[key]
             if (self.bit_check(functionMask, bit)):
                 functions.append(key)
         return functions
@@ -227,16 +225,16 @@ class connMSP():
 
     def save2eprom(self):
         logging.info("Save to EPROM requested") # some configs also need reboot to be applied (not online).
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_EEPROM_WRITE'], data=[])
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_EEPROM_WRITE'], data=[])
 
 
     def reboot(self):
         logging.info("Reboot requested")
         rebooting = True
         while rebooting:
-            if self.send_RAW_msg(self.mspy.MSPCodes['MSP_REBOOT'], data=[]):
+            if self.send_RAW_msg(self.board.MSPCodes['MSP_REBOOT'], data=[]):
                 dataHandler = self.receive_msg()
-                if dataHandler['code'] == self.mspy.MSPCodes['MSP_REBOOT'] and dataHandler['packet_error'] == 0:
+                if dataHandler['code'] == self.board.MSPCodes['MSP_REBOOT'] and dataHandler['packet_error'] == 0:
                     rebooting = False
 
 
@@ -247,21 +245,21 @@ class connMSP():
         https://github.com/betaflight/betaflight/wiki/Runaway-Takeoff-Prevention
         """
         data = bytearray([armingDisabled, runawayTakeoffPreventionDisabled])
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_ARMING_DISABLE'], data)
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_ARMING_DISABLE'], data)
 
 
     def set_RX_MAP(self, new_rc_map):
         assert(type(new_rc_map)==list)
         assert(len(new_rc_map)==8)
 
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_SET_RX_MAP'], new_rc_map)
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_RX_MAP'], new_rc_map)
 
 
     def set_FEATURE_CONFIG(self, mask):
         assert(type(mask)==int)
 
         data = self.convert([mask], 32)
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_SET_FEATURE_CONFIG'], data)
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_FEATURE_CONFIG'], data)
 
 
     def send_RAW_MOTORS(self, data=[]):
@@ -271,7 +269,7 @@ class connMSP():
         data = self.convert(data, 16) # any values bigger than 255 need to be converted.
                                       # RC and Motor commands go from 0 to 2000.
 
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_SET_MOTOR'], data)
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_MOTOR'], data)
 
 
     def send_RAW_RC(self, data=[]):
@@ -287,20 +285,20 @@ class connMSP():
         data = self.convert(data, 16) # any values bigger than 255 need to be converted.
                                       # RC and Motor commands go from 0 to 2000.
 
-        return self.send_RAW_msg(self.mspy.MSPCodes['MSP_SET_RAW_RC'], data)
+        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_RAW_RC'], data)
 
 
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
         mspv = 1 if code <= 255 else 2 # should i set to 2 always?
         bufView = msp_ctrl.prepare_RAW_msg(mspv, code, data)
-        with self.mspy.port_write_lock:
+        with self.board.port_write_lock:
             current_write = time.time()
-            if (current_write-self.mspy.last_write) < self.mspy.min_time_between_writes:
-                time.sleep(max(self.mspy.min_time_between_writes-(current_write-self.mspy.last_write),0))
-            res = self.mspy.write(bufView)
+            if (current_write-self.board.last_write) < self.board.min_time_between_writes:
+                time.sleep(max(self.board.min_time_between_writes-(current_write-self.board.last_write),0))
+            res = self.board.write(bufView)
             if flush:
-                self.mspy.flush()
-            self.mspy.last_write = current_write
+                self.board.flush()
+            self.board.last_write = current_write
             logging.debug("RAW message sent: {}".format(bufView))
             return res
 
@@ -332,10 +330,8 @@ class connMSP():
             logging.debug("dataHandler has a packet_error.")
             return -3
         else:
-            #print("process_" + self.mspy.R_MSPCodes[code])
             if (not dataHandler['unsupported']):
-                processor = getattr(self.mspy, "process_" + self.mspy.R_MSPCodes[code], None)
-                
+                processor = getattr(self.board, "process_" + self.board.R_MSPCodes[code], None)
                 if processor: # if nothing is found, should be None
                     try:
                         if data:

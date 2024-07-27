@@ -8,391 +8,391 @@ from select import select
 
 class processMSP():
     def __init__(self, mspy_instance):
-        self.mspy = mspy_instance
+        self.board = mspy_instance
 
     def process_MSP_STATUS(self, data):
-        self.mspy.CONFIG['cycleTime'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['i2cError'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['activeSensors'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['mode'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.CONFIG['profile'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['cycleTime'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['i2cError'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['activeSensors'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['mode'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.CONFIG['profile'] = self.board.readbytes(data, size=8, unsigned=True)
         
     def process_MSP_STATUS_EX(self, data):
-        self.mspy.CONFIG['cycleTime'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['i2cError'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['activeSensors'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['mode'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.CONFIG['cycleTime'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['i2cError'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['activeSensors'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['mode'] = self.board.readbytes(data, size=32, unsigned=True)
 
-        self.mspy.CONFIG['profile'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.CONFIG['cpuload'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['profile'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['cpuload'] = self.board.readbytes(data, size=16, unsigned=True)
         
-        if not self.mspy.INAV:
-            self.mspy.CONFIG['numProfiles'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.CONFIG['rateProfile'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:
+            self.board.CONFIG['numProfiles'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.CONFIG['rateProfile'] = self.board.readbytes(data, size=8, unsigned=True)
 
             # Read flight mode flags
-            byteCount = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.CONFIG['flightModeFlags'] = [] # this was not implemented on betaflight-configurator
+            byteCount = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.CONFIG['flightModeFlags'] = [] # this was not implemented on betaflight-configurator
             for _ in range(byteCount):
                 # betaflight-configurator would just discard these bytes
-                self.mspy.CONFIG['flightModeFlags'].append(self.mspy.readbytes(data, size=8, unsigned=True))
+                self.board.CONFIG['flightModeFlags'].append(self.board.readbytes(data, size=8, unsigned=True))
 
             # Read arming disable flags
-            self.mspy.CONFIG['armingDisableCount'] = self.mspy.readbytes(data, size=8, unsigned=True) # Flag count
-            self.mspy.CONFIG['armingDisableFlags'] = self.mspy.readbytes(data, size=32, unsigned=True)
+            self.board.CONFIG['armingDisableCount'] = self.board.readbytes(data, size=8, unsigned=True) # Flag count
+            self.board.CONFIG['armingDisableFlags'] = self.board.readbytes(data, size=32, unsigned=True)
         else:
-            self.mspy.CONFIG['armingDisableFlags'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.CONFIG['armingDisableFlags'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP2_INAV_STATUS(self, data):
-        self.mspy.CONFIG['cycleTime'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['i2cError'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['activeSensors'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['cpuload'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.CONFIG['profile'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.CONFIG['armingDisableFlags'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.CONFIG['mode'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.CONFIG['cycleTime'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['i2cError'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['activeSensors'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['cpuload'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['profile'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['armingDisableFlags'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.CONFIG['mode'] = self.board.readbytes(data, size=32, unsigned=True)
         
 
     def process_MSP_RAW_IMU(self, data):
         # /512 for mpu6050, /256 for mma
         # currently we are unable to differentiate between the sensor types, so we are going with 512
         # And what about SENSOR_CONFIG???
-        self.mspy.SENSOR_DATA['accelerometer'][0] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['accelerometer'][1] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['accelerometer'][2] = self.mspy.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['accelerometer'][0] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['accelerometer'][1] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['accelerometer'][2] = self.board.readbytes(data, size=16, unsigned=False)
 
         # properly scaled (INAV and BF use the same * (4 / 16.4))
         # but this is supposed to be RAW, so raw it is!
-        self.mspy.SENSOR_DATA['gyroscope'][0] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['gyroscope'][1] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['gyroscope'][2] = self.mspy.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['gyroscope'][0] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['gyroscope'][1] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['gyroscope'][2] = self.board.readbytes(data, size=16, unsigned=False)
 
         # no clue about scaling factor (/1090), so raw
-        self.mspy.SENSOR_DATA['magnetometer'][0] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['magnetometer'][1] = self.mspy.readbytes(data, size=16, unsigned=False)
-        self.mspy.SENSOR_DATA['magnetometer'][2] = self.mspy.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['magnetometer'][0] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['magnetometer'][1] = self.board.readbytes(data, size=16, unsigned=False)
+        self.board.SENSOR_DATA['magnetometer'][2] = self.board.readbytes(data, size=16, unsigned=False)
 
     def process_MSP_SERVO(self, data):
         servoCount = int(len(data) / 2)
-        self.mspy.SERVO_DATA = [self.mspy.readbytes(data, size=16, unsigned=True) for _ in range(servoCount)]
+        self.board.SERVO_DATA = [self.board.readbytes(data, size=16, unsigned=True) for _ in range(servoCount)]
 
     def process_MSP_MOTOR(self, data):
         motorCount = int(len(data) / 2)
-        self.mspy.MOTOR_DATA = [self.mspy.readbytes(data, size=16, unsigned=True) for i in range(motorCount)]
+        self.board.MOTOR_DATA = [self.board.readbytes(data, size=16, unsigned=True) for i in range(motorCount)]
 
     def process_MSP_RC(self, data):
         n_channels = int(len(data) / 2)
-        self.mspy.RC['active_channels'] = n_channels
-        self.mspy.RC['channels'] = [self.mspy.readbytes(data, size=16, unsigned=True) for i in range(n_channels)]
+        self.board.RC['active_channels'] = n_channels
+        self.board.RC['channels'] = [self.board.readbytes(data, size=16, unsigned=True) for i in range(n_channels)]
 
     def process_MSP_RAW_GPS(self, data):
-        self.mspy.GPS_DATA['fix'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.GPS_DATA['numSat'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.GPS_DATA['lat'] = self.mspy.readbytes(data, size=32, unsigned=False)
-        self.mspy.GPS_DATA['lon'] = self.mspy.readbytes(data, size=32, unsigned=False)
-        self.mspy.GPS_DATA['alt'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['speed'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['ground_course'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['fix'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_DATA['numSat'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_DATA['lat'] = self.board.readbytes(data, size=32, unsigned=False)
+        self.board.GPS_DATA['lon'] = self.board.readbytes(data, size=32, unsigned=False)
+        self.board.GPS_DATA['alt'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['speed'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['ground_course'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        if self.mspy.INAV:
-            self.mspy.GPS_DATA['hdop'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        if self.board.INAV:
+            self.board.GPS_DATA['hdop'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_COMP_GPS(self, data):
-        self.mspy.GPS_DATA['distanceToHome'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['directionToHome'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['update'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_DATA['distanceToHome'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['directionToHome'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['update'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_GPSSTATISTICS(self, data):
-        self.mspy.GPS_DATA['messageDt'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['errors'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.GPS_DATA['timeouts'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.GPS_DATA['packetCount'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.GPS_DATA['hdop'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['eph'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_DATA['epv'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['messageDt'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['errors'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.GPS_DATA['timeouts'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.GPS_DATA['packetCount'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.GPS_DATA['hdop'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['eph'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['epv'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_ATTITUDE(self, data):
-        self.mspy.SENSOR_DATA['kinematics'][0] = self.mspy.readbytes(data, size=16, unsigned=False) / 10.0 # x
-        self.mspy.SENSOR_DATA['kinematics'][1] = self.mspy.readbytes(data, size=16, unsigned=False) / 10.0 # y
-        self.mspy.SENSOR_DATA['kinematics'][2] = self.mspy.readbytes(data, size=16, unsigned=False) # z
+        self.board.SENSOR_DATA['kinematics'][0] = self.board.readbytes(data, size=16, unsigned=False) / 10.0 # x
+        self.board.SENSOR_DATA['kinematics'][1] = self.board.readbytes(data, size=16, unsigned=False) / 10.0 # y
+        self.board.SENSOR_DATA['kinematics'][2] = self.board.readbytes(data, size=16, unsigned=False) # z
 
     def process_MSP_ALTITUDE(self, data):
-        self.mspy.SENSOR_DATA['altitude'] = round((self.mspy.readbytes(data, size=32, unsigned=False) / 100.0), 2) # correct scale factor
-        self.mspy.SENSOR_DATA['altitude_vel'] = round(self.mspy.readbytes(data, size=16, unsigned=False) / 100.0, 2)
-        # Baro altitude => self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.SENSOR_DATA['altitude'] = round((self.board.readbytes(data, size=32, unsigned=False) / 100.0), 2) # correct scale factor
+        self.board.SENSOR_DATA['altitude_vel'] = round(self.board.readbytes(data, size=16, unsigned=False) / 100.0, 2)
+        # Baro altitude => self.board.readbytes(data, size=32, unsigned=True)
 
 
     def process_MSP_SONAR(self, data):
-        self.mspy.SENSOR_DATA['sonar'] = self.mspy.readbytes(data, size=32, unsigned=False)
+        self.board.SENSOR_DATA['sonar'] = self.board.readbytes(data, size=32, unsigned=False)
 
     def process_MSP_ANALOG(self, data):
-        self.mspy.ANALOG['voltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10.0
-        self.mspy.ANALOG['mAhdrawn'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.ANALOG['rssi'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-1023
-        self.mspy.ANALOG['amperage'] = self.mspy.readbytes(data, size=16, unsigned=False) / 100 # A
-        self.mspy.ANALOG['last_received_timestamp'] = int(time.time()) # why not monotonic? where is time synchronized?
-        if not self.mspy.INAV:
-            self.mspy.ANALOG['voltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
+        self.board.ANALOG['voltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10.0
+        self.board.ANALOG['mAhdrawn'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.ANALOG['rssi'] = self.board.readbytes(data, size=16, unsigned=True) # 0-1023
+        self.board.ANALOG['amperage'] = self.board.readbytes(data, size=16, unsigned=False) / 100 # A
+        self.board.ANALOG['last_received_timestamp'] = int(time.time()) # why not monotonic? where is time synchronized?
+        if not self.board.INAV:
+            self.board.ANALOG['voltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
     
     def process_MSP2_INAV_ANALOG(self, data):
-        if self.mspy.INAV:
-            tmp = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ANALOG['battery_full_when_plugged_in'] = True if (tmp & 1) else False
-            self.mspy.ANALOG['use_capacity_thresholds'] = True if ((tmp & 2) >> 1) else False
-            self.mspy.ANALOG['battery_state'] = (tmp & 12) >> 2
-            self.mspy.ANALOG['cell_count'] = (tmp & 0xF0) >> 4
+        if self.board.INAV:
+            tmp = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ANALOG['battery_full_when_plugged_in'] = True if (tmp & 1) else False
+            self.board.ANALOG['use_capacity_thresholds'] = True if ((tmp & 2) >> 1) else False
+            self.board.ANALOG['battery_state'] = (tmp & 12) >> 2
+            self.board.ANALOG['cell_count'] = (tmp & 0xF0) >> 4
 
-            self.mspy.ANALOG['voltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-            self.mspy.ANALOG['amperage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100 # A
-            self.mspy.ANALOG['power'] = self.mspy.readbytes(data, size=32, unsigned=True) / 100
-            self.mspy.ANALOG['mAhdrawn'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.ANALOG['mWhdrawn'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.ANALOG['battery_remaining_capacity'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.ANALOG['battery_percentage'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ANALOG['rssi'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-1023
+            self.board.ANALOG['voltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+            self.board.ANALOG['amperage'] = self.board.readbytes(data, size=16, unsigned=True) / 100 # A
+            self.board.ANALOG['power'] = self.board.readbytes(data, size=32, unsigned=True) / 100
+            self.board.ANALOG['mAhdrawn'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.ANALOG['mWhdrawn'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.ANALOG['battery_remaining_capacity'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.ANALOG['battery_percentage'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ANALOG['rssi'] = self.board.readbytes(data, size=16, unsigned=True) # 0-1023
 
             # TODO: update both BF and INAV variables
-            self.mspy.BATTERY_STATE['cellCount'] = self.mspy.ANALOG['cell_count']
+            self.board.BATTERY_STATE['cellCount'] = self.board.ANALOG['cell_count']
 
     def process_MSP_VOLTAGE_METERS(self, data):
         total_bytes_per_meter = (8+8)/8 # just to make it clear where it comes from...
-        self.mspy.VOLTAGE_METERS = [{'id':self.mspy.readbytes(data, size=8, unsigned=True),
-                                'voltage':self.mspy.readbytes(data, size=8, unsigned=True) / 10.0
+        self.board.VOLTAGE_METERS = [{'id':self.board.readbytes(data, size=8, unsigned=True),
+                                'voltage':self.board.readbytes(data, size=8, unsigned=True) / 10.0
                                 } for _ in range(int(len(data) / total_bytes_per_meter))]
 
     def process_MSP_CURRENT_METERS(self, data):
         total_bytes_per_meter = (8+16+16)/8 # just to make it clear where it comes from...
-        self.mspy.CURRENT_METERS = [{'id':self.mspy.readbytes(data, size=8, unsigned=True),
-                                'mAhDrawn':self.mspy.readbytes(data, size=16, unsigned=True), # mAh
-                                'amperage':self.mspy.readbytes(data, size=16, unsigned=True) / 1000 # A
+        self.board.CURRENT_METERS = [{'id':self.board.readbytes(data, size=8, unsigned=True),
+                                'mAhDrawn':self.board.readbytes(data, size=16, unsigned=True), # mAh
+                                'amperage':self.board.readbytes(data, size=16, unsigned=True) / 1000 # A
                                 } for _ in range(int(len(data) / total_bytes_per_meter))]
 
     def process_MSP_BATTERY_STATE(self, data):
-        self.mspy.BATTERY_STATE['cellCount'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.BATTERY_STATE['capacity'] = self.mspy.readbytes(data, size=16, unsigned=True) # mAh
+        self.board.BATTERY_STATE['cellCount'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.BATTERY_STATE['capacity'] = self.board.readbytes(data, size=16, unsigned=True) # mAh
         # BATTERY_STATE.voltage = data.readU8() / 10.0; // V
-        self.mspy.BATTERY_STATE['mAhDrawn'] = self.mspy.readbytes(data, size=16, unsigned=True) # mAh
-        self.mspy.BATTERY_STATE['amperage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100 # A
-        self.mspy.BATTERY_STATE['batteryState'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.BATTERY_STATE['voltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100 # V
+        self.board.BATTERY_STATE['mAhDrawn'] = self.board.readbytes(data, size=16, unsigned=True) # mAh
+        self.board.BATTERY_STATE['amperage'] = self.board.readbytes(data, size=16, unsigned=True) / 100 # A
+        self.board.BATTERY_STATE['batteryState'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.BATTERY_STATE['voltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100 # V
 
     def process_MSP_VOLTAGE_METER_CONFIG(self, data):
-        self.mspy.VOLTAGE_METER_CONFIGS = []
-        if self.mspy.INAV:
+        self.board.VOLTAGE_METER_CONFIGS = []
+        if self.board.INAV:
             voltageMeterConfig = {}
-            voltageMeterConfig['vbatscale'] = self.mspy.readbytes(data, size=8, unsigned=True)/10
-            self.mspy.VOLTAGE_METER_CONFIGS.append(voltageMeterConfig)
-            self.mspy.BATTERY_CONFIG['vbatmincellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True)/10
-            self.mspy.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True)/10
-            self.mspy.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True)/10
+            voltageMeterConfig['vbatscale'] = self.board.readbytes(data, size=8, unsigned=True)/10
+            self.board.VOLTAGE_METER_CONFIGS.append(voltageMeterConfig)
+            self.board.BATTERY_CONFIG['vbatmincellvoltage'] = self.board.readbytes(data, size=8, unsigned=True)/10
+            self.board.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True)/10
+            self.board.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True)/10
         else:
-            voltage_meter_count = self.mspy.readbytes(data, size=8, unsigned=True)
+            voltage_meter_count = self.board.readbytes(data, size=8, unsigned=True)
 
             for i in range(voltage_meter_count):
-                subframe_length = self.mspy.readbytes(data, size=8, unsigned=True)
+                subframe_length = self.board.readbytes(data, size=8, unsigned=True)
                 if (subframe_length != 5):
                     for j in range(subframe_length):
-                        self.mspy.readbytes(data, size=8, unsigned=True)
+                        self.board.readbytes(data, size=8, unsigned=True)
                 else:
                     voltageMeterConfig = {}
-                    voltageMeterConfig['id'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    voltageMeterConfig['sensorType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    voltageMeterConfig['vbatscale'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    voltageMeterConfig['vbatresdivval'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    voltageMeterConfig['vbatresdivmultiplier'] = self.mspy.readbytes(data, size=8, unsigned=True)
+                    voltageMeterConfig['id'] = self.board.readbytes(data, size=8, unsigned=True)
+                    voltageMeterConfig['sensorType'] = self.board.readbytes(data, size=8, unsigned=True)
+                    voltageMeterConfig['vbatscale'] = self.board.readbytes(data, size=8, unsigned=True)
+                    voltageMeterConfig['vbatresdivval'] = self.board.readbytes(data, size=8, unsigned=True)
+                    voltageMeterConfig['vbatresdivmultiplier'] = self.board.readbytes(data, size=8, unsigned=True)
 
-                    self.mspy.VOLTAGE_METER_CONFIGS.append(voltageMeterConfig)
+                    self.board.VOLTAGE_METER_CONFIGS.append(voltageMeterConfig)
 
     def process_MSP_CURRENT_METER_CONFIG(self, data):
-        self.mspy.CURRENT_METER_CONFIGS = []
-        if self.mspy.INAV:
+        self.board.CURRENT_METER_CONFIGS = []
+        if self.board.INAV:
             currentMeterConfig = {}
-            currentMeterConfig['scale'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            currentMeterConfig['offset'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            currentMeterConfig['sensorType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.CURRENT_METER_CONFIGS.append(currentMeterConfig)
-            self.mspy.BATTERY_CONFIG['capacity'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            currentMeterConfig['scale'] = self.board.readbytes(data, size=16, unsigned=True)
+            currentMeterConfig['offset'] = self.board.readbytes(data, size=16, unsigned=True)
+            currentMeterConfig['sensorType'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.CURRENT_METER_CONFIGS.append(currentMeterConfig)
+            self.board.BATTERY_CONFIG['capacity'] = self.board.readbytes(data, size=16, unsigned=True)
         else:
-            current_meter_count = self.mspy.readbytes(data, size=8, unsigned=True)
+            current_meter_count = self.board.readbytes(data, size=8, unsigned=True)
             for i in range(current_meter_count):
                 currentMeterConfig = {}
-                subframe_length = self.mspy.readbytes(data, size=8, unsigned=True)
+                subframe_length = self.board.readbytes(data, size=8, unsigned=True)
 
                 if (subframe_length != 6):
                     for j in range(subframe_length):
-                        self.mspy.readbytes(data, size=8, unsigned=True)
+                        self.board.readbytes(data, size=8, unsigned=True)
                 else:
-                    currentMeterConfig['id'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    currentMeterConfig['sensorType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-                    currentMeterConfig['scale'] = self.mspy.readbytes(data, size=16, unsigned=False)
-                    currentMeterConfig['offset'] = self.mspy.readbytes(data, size=16, unsigned=False)
+                    currentMeterConfig['id'] = self.board.readbytes(data, size=8, unsigned=True)
+                    currentMeterConfig['sensorType'] = self.board.readbytes(data, size=8, unsigned=True)
+                    currentMeterConfig['scale'] = self.board.readbytes(data, size=16, unsigned=False)
+                    currentMeterConfig['offset'] = self.board.readbytes(data, size=16, unsigned=False)
 
-                    self.mspy.CURRENT_METER_CONFIGS.append(currentMeterConfig)
+                    self.board.CURRENT_METER_CONFIGS.append(currentMeterConfig)
 
     def process_MSP_BATTERY_CONFIG(self, data):
-        self.mspy.BATTERY_CONFIG['vbatmincellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
-        self.mspy.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
-        self.mspy.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
-        self.mspy.BATTERY_CONFIG['capacity'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.BATTERY_CONFIG['voltageMeterSource'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.BATTERY_CONFIG['currentMeterSource'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.BATTERY_CONFIG['vbatmincellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+        self.board.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+        self.board.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+        self.board.BATTERY_CONFIG['capacity'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.BATTERY_CONFIG['voltageMeterSource'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.BATTERY_CONFIG['currentMeterSource'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        self.mspy.BATTERY_CONFIG['vbatmincellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-        self.mspy.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-        self.mspy.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
+        self.board.BATTERY_CONFIG['vbatmincellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+        self.board.BATTERY_CONFIG['vbatmaxcellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+        self.board.BATTERY_CONFIG['vbatwarningcellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
 
     def process_MSP_RC_TUNING(self, data):
-        self.mspy.RC_TUNING['RC_RATE'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-        self.mspy.RC_TUNING['RC_EXPO'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['RC_RATE'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['RC_EXPO'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-        self.mspy.RC_TUNING['roll_pitch_rate'] = 0
-        self.mspy.RC_TUNING['roll_rate'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-        self.mspy.RC_TUNING['pitch_rate'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['roll_pitch_rate'] = 0
+        self.board.RC_TUNING['roll_rate'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['pitch_rate'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-        self.mspy.RC_TUNING['yaw_rate'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-        self.mspy.RC_TUNING['dynamic_THR_PID'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-        self.mspy.RC_TUNING['throttle_MID'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-        self.mspy.RC_TUNING['throttle_EXPO'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['yaw_rate'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['dynamic_THR_PID'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['throttle_MID'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['throttle_EXPO'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-        self.mspy.RC_TUNING['dynamic_THR_breakpoint'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.RC_TUNING['dynamic_THR_breakpoint'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        self.mspy.RC_TUNING['RC_YAW_EXPO'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        self.board.RC_TUNING['RC_YAW_EXPO'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-        if not self.mspy.INAV:
-            self.mspy.RC_TUNING['rcYawRate'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+        if not self.board.INAV:
+            self.board.RC_TUNING['rcYawRate'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-            self.mspy.RC_TUNING['rcPitchRate'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
-            self.mspy.RC_TUNING['RC_PITCH_EXPO'] = round((self.mspy.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+            self.board.RC_TUNING['rcPitchRate'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
+            self.board.RC_TUNING['RC_PITCH_EXPO'] = round((self.board.readbytes(data, size=8, unsigned=True) / 100.0), 2)
 
-            self.mspy.RC_TUNING['throttleLimitType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RC_TUNING['throttleLimitPercent'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.RC_TUNING['throttleLimitType'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RC_TUNING['throttleLimitPercent'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            if int("".join((self.mspy.CONFIG['apiVersion'].rsplit('.')))) >= 1420:
-                self.mspy.RC_TUNING['roll_rate_limit'] = self.mspy.readbytes(data, size=16, unsigned=True)
-                self.mspy.RC_TUNING['pitch_rate_limit'] = self.mspy.readbytes(data, size=16, unsigned=True)
-                self.mspy.RC_TUNING['yaw_rate_limit'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            if int("".join((self.board.CONFIG['apiVersion'].rsplit('.')))) >= 1420:
+                self.board.RC_TUNING['roll_rate_limit'] = self.board.readbytes(data, size=16, unsigned=True)
+                self.board.RC_TUNING['pitch_rate_limit'] = self.board.readbytes(data, size=16, unsigned=True)
+                self.board.RC_TUNING['yaw_rate_limit'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_PID(self, data):
-        self.mspy.PIDs = [
+        self.board.PIDs = [
             [
-                self.mspy.readbytes(data, size=8, unsigned=True) for _ in range(3)
+                self.board.readbytes(data, size=8, unsigned=True) for _ in range(3)
             ] 
             for _ in range(int(len(data)/3))
         ]
 
     def process_MSP2_PID(self, data):
-        self.mspy.PIDs = [
+        self.board.PIDs = [
             [
-                self.mspy.readbytes(data, size=8, unsigned=True) for _ in range(4)
+                self.board.readbytes(data, size=8, unsigned=True) for _ in range(4)
             ] 
             for _ in range(int(len(data)/4))
         ]
 
     def process_MSP_ARMING_CONFIG(self, data):
-        self.mspy.ARMING_CONFIG['auto_disarm_delay'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.ARMING_CONFIG['disarm_kill_switch'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        if not self.mspy.INAV:
-            self.mspy.ARMING_CONFIG['small_angle'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.ARMING_CONFIG['auto_disarm_delay'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.ARMING_CONFIG['disarm_kill_switch'] = self.board.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:
+            self.board.ARMING_CONFIG['small_angle'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_LOOP_TIME(self, data):
-        if self.mspy.INAV:
-            self.mspy.FC_CONFIG['loopTime'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        if self.board.INAV:
+            self.board.FC_CONFIG['loopTime'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_MISC(self, data): # 22 bytes
-        if self.mspy.INAV:
-            self.mspy.MISC['midrc'] = self.mspy.RX_CONFIG['midrc'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MISC['minthrottle'] = self.mspy.MOTOR_CONFIG['minthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['maxthrottle'] = self.mspy.MOTOR_CONFIG['maxthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['mincommand'] = self.mspy.MOTOR_CONFIG['mincommand'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['failsafe_throttle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 1000-2000
-            self.mspy.MISC['gps_type'] = self.mspy.GPS_CONFIG['provider'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['sensors_baudrate'] = self.mspy.MISC['gps_baudrate'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['gps_ubx_sbas'] = self.mspy.GPS_CONFIG['ublox_sbas'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['multiwiicurrentoutput'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['rssi_channel'] = self.mspy.RSSI_CONFIG['channel'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['placeholder2'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if self.board.INAV:
+            self.board.MISC['midrc'] = self.board.RX_CONFIG['midrc'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MISC['minthrottle'] = self.board.MOTOR_CONFIG['minthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['maxthrottle'] = self.board.MOTOR_CONFIG['maxthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['mincommand'] = self.board.MOTOR_CONFIG['mincommand'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['failsafe_throttle'] = self.board.readbytes(data, size=16, unsigned=True) # 1000-2000
+            self.board.MISC['gps_type'] = self.board.GPS_CONFIG['provider'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['sensors_baudrate'] = self.board.MISC['gps_baudrate'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['gps_ubx_sbas'] = self.board.GPS_CONFIG['ublox_sbas'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['multiwiicurrentoutput'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['rssi_channel'] = self.board.RSSI_CONFIG['channel'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['placeholder2'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.COMPASS_CONFIG['mag_declination'] = self.mspy.readbytes(data, size=16, unsigned=False) / 100 # -18000-18000
+            self.board.COMPASS_CONFIG['mag_declination'] = self.board.readbytes(data, size=16, unsigned=False) / 100 # -18000-18000
             
-            self.mspy.MISC['mag_declination'] = self.mspy.COMPASS_CONFIG['mag_declination']*10
+            self.board.MISC['mag_declination'] = self.board.COMPASS_CONFIG['mag_declination']*10
 
-            self.mspy.MISC['vbatscale'] = self.mspy.readbytes(data, size=8, unsigned=True) # 10-200
-            self.mspy.MISC['vbatmincellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
-            self.mspy.MISC['vbatmaxcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
-            self.mspy.MISC['vbatwarningcellvoltage'] = self.mspy.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+            self.board.MISC['vbatscale'] = self.board.readbytes(data, size=8, unsigned=True) # 10-200
+            self.board.MISC['vbatmincellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+            self.board.MISC['vbatmaxcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
+            self.board.MISC['vbatwarningcellvoltage'] = self.board.readbytes(data, size=8, unsigned=True) / 10 # 10-50
 
     def process_MSP2_INAV_MISC(self, data):
-        if self.mspy.INAV:
-            self.mspy.MISC['midrc'] = self.mspy.RX_CONFIG['midrc'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MISC['minthrottle'] = self.mspy.MOTOR_CONFIG['minthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['maxthrottle'] = self.mspy.MOTOR_CONFIG['maxthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['mincommand'] = self.mspy.MOTOR_CONFIG['mincommand'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-            self.mspy.MISC['failsafe_throttle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 1000-2000
-            self.mspy.MISC['gps_type'] = self.mspy.GPS_CONFIG['provider'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['sensors_baudrate'] = self.mspy.MISC['gps_baudrate'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['gps_ubx_sbas'] = self.mspy.GPS_CONFIG['ublox_sbas'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['rssi_channel'] = self.mspy.RSSI_CONFIG['channel'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if self.board.INAV:
+            self.board.MISC['midrc'] = self.board.RX_CONFIG['midrc'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MISC['minthrottle'] = self.board.MOTOR_CONFIG['minthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['maxthrottle'] = self.board.MOTOR_CONFIG['maxthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['mincommand'] = self.board.MOTOR_CONFIG['mincommand'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+            self.board.MISC['failsafe_throttle'] = self.board.readbytes(data, size=16, unsigned=True) # 1000-2000
+            self.board.MISC['gps_type'] = self.board.GPS_CONFIG['provider'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['sensors_baudrate'] = self.board.MISC['gps_baudrate'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['gps_ubx_sbas'] = self.board.GPS_CONFIG['ublox_sbas'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['rssi_channel'] = self.board.RSSI_CONFIG['channel'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.MISC['mag_declination'] = self.mspy.readbytes(data, size=16, unsigned=False) / 10 # -18000-18000
-            self.mspy.MISC['vbatscale'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MISC['voltage_source'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['battery_cells'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MISC['vbatdetectcellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-            self.mspy.MISC['vbatmincellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-            self.mspy.MISC['vbatmaxcellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-            self.mspy.MISC['vbatwarningcellvoltage'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
-            self.mspy.MISC['battery_capacity'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.MISC['battery_capacity_warning'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.MISC['battery_capacity_critical'] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.MISC['battery_capacity_unit'] = 'mWh' if self.mspy.readbytes(data, size=8, unsigned=True) else 'mAh'
+            self.board.MISC['mag_declination'] = self.board.readbytes(data, size=16, unsigned=False) / 10 # -18000-18000
+            self.board.MISC['vbatscale'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MISC['voltage_source'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['battery_cells'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MISC['vbatdetectcellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+            self.board.MISC['vbatmincellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+            self.board.MISC['vbatmaxcellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+            self.board.MISC['vbatwarningcellvoltage'] = self.board.readbytes(data, size=16, unsigned=True) / 100
+            self.board.MISC['battery_capacity'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.MISC['battery_capacity_warning'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.MISC['battery_capacity_critical'] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.MISC['battery_capacity_unit'] = 'mWh' if self.board.readbytes(data, size=8, unsigned=True) else 'mAh'
 
     def process_MSP_MOTOR_CONFIG(self, data):
-        self.mspy.MOTOR_CONFIG['minthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-        self.mspy.MOTOR_CONFIG['maxthrottle'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
-        self.mspy.MOTOR_CONFIG['mincommand'] = self.mspy.readbytes(data, size=16, unsigned=True) # 0-2000
+        self.board.MOTOR_CONFIG['minthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+        self.board.MOTOR_CONFIG['maxthrottle'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
+        self.board.MOTOR_CONFIG['mincommand'] = self.board.readbytes(data, size=16, unsigned=True) # 0-2000
 
-        self.mspy.MOTOR_CONFIG['motor_count'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.MOTOR_CONFIG['motor_poles'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.MOTOR_CONFIG['use_dshot_telemetry'] = (self.mspy.readbytes(data, size=8, unsigned=True) != 0)
-        self.mspy.MOTOR_CONFIG['use_esc_sensor'] = (self.mspy.readbytes(data, size=8, unsigned=True) != 0)
+        self.board.MOTOR_CONFIG['motor_count'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.MOTOR_CONFIG['motor_poles'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.MOTOR_CONFIG['use_dshot_telemetry'] = (self.board.readbytes(data, size=8, unsigned=True) != 0)
+        self.board.MOTOR_CONFIG['use_esc_sensor'] = (self.board.readbytes(data, size=8, unsigned=True) != 0)
 
     def process_MSP_COMPASS_CONFIG(self, data):
-        self.mspy.COMPASS_CONFIG['mag_declination'] = self.mspy.readbytes(data, size=16, unsigned=False) / 100 # -18000-18000
+        self.board.COMPASS_CONFIG['mag_declination'] = self.board.readbytes(data, size=16, unsigned=False) / 100 # -18000-18000
 
     def process_MSP_GPS_CONFIG(self, data):
-        self.mspy.GPS_CONFIG['provider'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.GPS_CONFIG['ublox_sbas'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_CONFIG['provider'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_CONFIG['ublox_sbas'] = self.board.readbytes(data, size=8, unsigned=True)
         
-        self.mspy.GPS_CONFIG['auto_config'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.GPS_CONFIG['auto_baud'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_CONFIG['auto_config'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_CONFIG['auto_baud'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_GPS_RESCUE(self, data):
-        self.mspy.GPS_RESCUE['angle']             = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['initialAltitudeM']  = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['descentDistanceM']  = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['rescueGroundspeed'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['throttleMin']       = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['throttleMax']       = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['throttleHover']     = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.GPS_RESCUE['sanityChecks']      = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.GPS_RESCUE['minSats']           = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_RESCUE['angle']             = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['initialAltitudeM']  = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['descentDistanceM']  = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['rescueGroundspeed'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['throttleMin']       = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['throttleMax']       = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['throttleHover']     = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_RESCUE['sanityChecks']      = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.GPS_RESCUE['minSats']           = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_RSSI_CONFIG(self, data):
-        self.mspy.RSSI_CONFIG['channel'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.RSSI_CONFIG['channel'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_MOTOR_3D_CONFIG(self, data):
-        self.mspy.MOTOR_3D_CONFIG['deadband3d_low'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.MOTOR_3D_CONFIG['deadband3d_high'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.MOTOR_3D_CONFIG['neutral'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.MOTOR_3D_CONFIG['deadband3d_low'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.MOTOR_3D_CONFIG['deadband3d_high'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.MOTOR_3D_CONFIG['neutral'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_BOXNAMES(self, data):
-        self.mspy.AUX_CONFIG = [] # empty the array as new data is coming in
+        self.board.AUX_CONFIG = [] # empty the array as new data is coming in
 
         buff = ""
         for i in range(len(data)):
-            char = self.mspy.readbytes(data, size=8, unsigned=True)
+            char = self.board.readbytes(data, size=8, unsigned=True)
             if (char == 0x3B): # ; (delimeter char)
-                self.mspy.AUX_CONFIG.append(buff) # convert bytes into ASCII and save as strings
+                self.board.AUX_CONFIG.append(buff) # convert bytes into ASCII and save as strings
 
                 # empty buffer
                 buff = ""
@@ -400,13 +400,13 @@ class processMSP():
                 buff += chr(char)
 
     def process_MSP_PIDNAMES(self, data):
-        self.mspy.PIDNAMES = [] # empty the array as new data is coming in
+        self.board.PIDNAMES = [] # empty the array as new data is coming in
 
         buff = ""
         for i in range(len(data)):
-            char = self.mspy.readbytes(data, size=8, unsigned=True)
+            char = self.board.readbytes(data, size=8, unsigned=True)
             if (char == 0x3B):  # ; (delimeter char)
-                self.mspy.PIDNAMES.append(buff) # convert bytes into ASCII and save as strings
+                self.board.PIDNAMES.append(buff) # convert bytes into ASCII and save as strings
 
                 # empty buffer
                 buff = ""
@@ -414,46 +414,44 @@ class processMSP():
                 buff += chr(char)
 
     def process_MSP_BOXIDS(self, data):
-        self.mspy.AUX_CONFIG_IDS = [] # empty the array as new data is coming in
-
+        self.board.AUX_CONFIG_IDS = [] # empty the array as new data is coming in
         for i in range(len(data)):
-            self.mspy.AUX_CONFIG_IDS.append(self.mspy.readbytes(data, size=8, unsigned=True))
-        print(self.mspy.AUX_CONFIG_IDS)
+            self.board.AUX_CONFIG_IDS.append(self.board.readbytes(data, size=8, unsigned=True))
 
     def process_MSP_SERVO_CONFIGURATIONS(self, data):
-        self.mspy.SERVO_CONFIG = [] # empty the array as new data is coming in
+        self.board.SERVO_CONFIG = [] # empty the array as new data is coming in
         if (len(data) % 12 == 0):
             for i in range(0, len(data), 12):
                 arr = {
-                    'min':                      self.mspy.readbytes(data, size=16, unsigned=True),
-                    'max':                      self.mspy.readbytes(data, size=16, unsigned=True),
-                    'middle':                   self.mspy.readbytes(data, size=16, unsigned=True),
-                    'rate':                     self.mspy.readbytes(data, size=8, unsigned=False),
-                    'indexOfChannelToForward':  self.mspy.readbytes(data, size=8, unsigned=True),
-                    'reversedInputSources':     self.mspy.readbytes(data, size=32, unsigned=True)
+                    'min':                      self.board.readbytes(data, size=16, unsigned=True),
+                    'max':                      self.board.readbytes(data, size=16, unsigned=True),
+                    'middle':                   self.board.readbytes(data, size=16, unsigned=True),
+                    'rate':                     self.board.readbytes(data, size=8, unsigned=False),
+                    'indexOfChannelToForward':  self.board.readbytes(data, size=8, unsigned=True),
+                    'reversedInputSources':     self.board.readbytes(data, size=32, unsigned=True)
                 }
 
-                self.mspy.SERVO_CONFIG.append(arr)
+                self.board.SERVO_CONFIG.append(arr)
 
     def process_MSP_RC_DEADBAND(self, data):
-        self.mspy.RC_DEADBAND_CONFIG['deadband'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RC_DEADBAND_CONFIG['yaw_deadband'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RC_DEADBAND_CONFIG['alt_hold_deadband'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.RC_DEADBAND_CONFIG['deadband'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RC_DEADBAND_CONFIG['yaw_deadband'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RC_DEADBAND_CONFIG['alt_hold_deadband'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        self.mspy.RC_DEADBAND_CONFIG['deadband3d_throttle'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.RC_DEADBAND_CONFIG['deadband3d_throttle'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_SENSOR_ALIGNMENT(self, data):
-        self.mspy.SENSOR_ALIGNMENT['align_gyro'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SENSOR_ALIGNMENT['align_acc'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SENSOR_ALIGNMENT['align_mag'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_ALIGNMENT['align_gyro'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_ALIGNMENT['align_acc'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_ALIGNMENT['align_mag'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        if self.mspy.INAV:
-            self.mspy.SENSOR_ALIGNMENT['align_opflow'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if self.board.INAV:
+            self.board.SENSOR_ALIGNMENT['align_opflow'] = self.board.readbytes(data, size=8, unsigned=True)
         else:
-            self.mspy.SENSOR_ALIGNMENT['gyro_detection_flags'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.SENSOR_ALIGNMENT['gyro_to_use'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.SENSOR_ALIGNMENT['gyro_1_align'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.SENSOR_ALIGNMENT['gyro_2_align'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_ALIGNMENT['gyro_detection_flags'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_ALIGNMENT['gyro_to_use'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_ALIGNMENT['gyro_1_align'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_ALIGNMENT['gyro_2_align'] = self.board.readbytes(data, size=8, unsigned=True)
 
     # def process_MSP_DISPLAYPORT(self, data):
 
@@ -507,414 +505,414 @@ class processMSP():
         
     def process_MSP_DEBUG(self, data):
         for i in range(4):
-            self.mspy.SENSOR_DATA['debug'][i] = self.mspy.readbytes(data, size=16, unsigned=False)
+            self.board.SENSOR_DATA['debug'][i] = self.board.readbytes(data, size=16, unsigned=False)
 
     def process_MSP2_INAV_DEBUG(self, data):
         for i in range(8):
-            self.mspy.SENSOR_DATA['debug'][i] = self.mspy.readbytes(data, size=32, unsigned=False)
+            self.board.SENSOR_DATA['debug'][i] = self.board.readbytes(data, size=32, unsigned=False)
 
     def process_MSP_SET_MOTOR(self, data):
         logging.info('Motor Speeds Updated')
 
     def process_MSP_UID(self, data):
         for i in range(3):
-            self.mspy.CONFIG['uid'][i] = self.mspy.readbytes(data, size=32, unsigned=True)
+            self.board.CONFIG['uid'][i] = self.board.readbytes(data, size=32, unsigned=True)
     
     def process_MSP_ACC_TRIM(self, data):
-        self.mspy.CONFIG['accelerometerTrims'][0] = self.mspy.readbytes(data, size=16, unsigned=False) # pitch
-        self.mspy.CONFIG['accelerometerTrims'][1] = self.mspy.readbytes(data, size=16, unsigned=False) # roll
+        self.board.CONFIG['accelerometerTrims'][0] = self.board.readbytes(data, size=16, unsigned=False) # pitch
+        self.board.CONFIG['accelerometerTrims'][1] = self.board.readbytes(data, size=16, unsigned=False) # roll
 
     def process_MSP_SET_ACC_TRIM(self, data):
         logging.info('Accelerometer trimms saved.')
 
     def process_MSP_GPS_SV_INFO(self, data):
         if (len(data) > 0):
-            numCh = self.mspy.readbytes(data, size=8, unsigned=True)
+            numCh = self.board.readbytes(data, size=8, unsigned=True)
 
             for i in range(numCh):
-                self.mspy.GPS_DATA['chn'].append(self.mspy.readbytes(data, size=8, unsigned=True))
-                self.mspy.GPS_DATA['svid'].append(self.mspy.readbytes(data, size=8, unsigned=True))
-                self.mspy.GPS_DATA['quality'].append(self.mspy.readbytes(data, size=8, unsigned=True))
-                self.mspy.GPS_DATA['cno'].append(self.mspy.readbytes(data, size=8, unsigned=True))
+                self.board.GPS_DATA['chn'].append(self.board.readbytes(data, size=8, unsigned=True))
+                self.board.GPS_DATA['svid'].append(self.board.readbytes(data, size=8, unsigned=True))
+                self.board.GPS_DATA['quality'].append(self.board.readbytes(data, size=8, unsigned=True))
+                self.board.GPS_DATA['cno'].append(self.board.readbytes(data, size=8, unsigned=True))
 
     def process_MSP_RX_MAP(self, data):
-        self.mspy.RC_MAP = [] # empty the array as new data is coming in
+        self.board.RC_MAP = [] # empty the array as new data is coming in
 
         for i in range(len(data)):
-            self.mspy.RC_MAP.append(self.mspy.readbytes(data, size=8, unsigned=True))
+            self.board.RC_MAP.append(self.board.readbytes(data, size=8, unsigned=True))
 
     def process_MSP_SET_RX_MAP(self, data):
         logging.debug('RCMAP saved')
         
     def process_MSP_MIXER_CONFIG(self, data):
-        self.mspy.MIXER_CONFIG['mixer'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        if not self.mspy.INAV:                    
-            self.mspy.MIXER_CONFIG['reverseMotorDir'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.MIXER_CONFIG['mixer'] = self.board.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:                    
+            self.board.MIXER_CONFIG['reverseMotorDir'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_FEATURE_CONFIG(self, data):
-        self.mspy.FEATURE_CONFIG['featuremask']  = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.FEATURE_CONFIG['featuremask']  = self.board.readbytes(data, size=32, unsigned=True)
         for idx in range(32):
-            enabled = self.mspy.bit_check(self.mspy.FEATURE_CONFIG['featuremask'], idx)
-            if idx in self.mspy.FEATURE_CONFIG['features'].keys():
-                self.mspy.FEATURE_CONFIG['features'][idx]['enabled'] = enabled
+            enabled = self.board.bit_check(self.board.FEATURE_CONFIG['featuremask'], idx)
+            if idx in self.board.FEATURE_CONFIG['features'].keys():
+                self.board.FEATURE_CONFIG['features'][idx]['enabled'] = enabled
             else:
-                self.mspy.FEATURE_CONFIG['features'][idx] = {'enabled': enabled}
+                self.board.FEATURE_CONFIG['features'][idx] = {'enabled': enabled}
 
     def process_MSP_BEEPER_CONFIG(self, data):
-        self.mspy.BEEPER_CONFIG['beepers'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.BEEPER_CONFIG['beepers'] = self.board.readbytes(data, size=32, unsigned=True)
             
-        self.mspy.BEEPER_CONFIG['dshotBeaconTone'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.BEEPER_CONFIG['dshotBeaconTone'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        self.mspy.BEEPER_CONFIG['dshotBeaconConditions'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.BEEPER_CONFIG['dshotBeaconConditions'] = self.board.readbytes(data, size=32, unsigned=True)
 
     def process_MSP_BOARD_ALIGNMENT_CONFIG(self, data):
-        self.mspy.BOARD_ALIGNMENT_CONFIG['roll'] = self.mspy.readbytes(data, size=16, unsigned=False) # -180 - 360
-        self.mspy.BOARD_ALIGNMENT_CONFIG['pitch'] = self.mspy.readbytes(data, size=16, unsigned=False) # -180 - 360
-        self.mspy.BOARD_ALIGNMENT_CONFIG['yaw'] = self.mspy.readbytes(data, size=16, unsigned=False) # -180 - 360
+        self.board.BOARD_ALIGNMENT_CONFIG['roll'] = self.board.readbytes(data, size=16, unsigned=False) # -180 - 360
+        self.board.BOARD_ALIGNMENT_CONFIG['pitch'] = self.board.readbytes(data, size=16, unsigned=False) # -180 - 360
+        self.board.BOARD_ALIGNMENT_CONFIG['yaw'] = self.board.readbytes(data, size=16, unsigned=False) # -180 - 360
 
     def process_MSP_SET_REBOOT(self, data):
-        rebootType = self.mspy.readbytes(data, size=8, unsigned=True)
+        rebootType = self.board.readbytes(data, size=8, unsigned=True)
 
-        if ((rebootType == self.mspy.REBOOT_TYPES['MSC']) or (rebootType == self.mspy.REBOOT_TYPES['MSC_UTC'])):
-            if (self.mspy.readbytes(data, size=8, unsigned=True) == 0):
+        if ((rebootType == self.board.REBOOT_TYPES['MSC']) or (rebootType == self.board.REBOOT_TYPES['MSC_UTC'])):
+            if (self.board.readbytes(data, size=8, unsigned=True) == 0):
                 logging.warning('Storage device not ready for reboot.')
 
         logging.info('Reboot request accepted')
 
     def process_MSP_API_VERSION(self, data):
-        self.mspy.CONFIG['mspProtocolVersion'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.CONFIG['apiVersion'] = str(self.mspy.readbytes(data, size=8, unsigned=True)) + '.' + str(self.mspy.readbytes(data, size=8, unsigned=True)) + '.0'
+        self.board.CONFIG['mspProtocolVersion'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['apiVersion'] = str(self.board.readbytes(data, size=8, unsigned=True)) + '.' + str(self.board.readbytes(data, size=8, unsigned=True)) + '.0'
 
     def process_MSP_FC_VARIANT(self, data):
         identifier = ''
         for i in range(4):
-            identifier += chr(self.mspy.readbytes(data, size=8, unsigned=True))
-        self.mspy.CONFIG['flightControllerIdentifier'] = identifier
+            identifier += chr(self.board.readbytes(data, size=8, unsigned=True))
+        self.board.CONFIG['flightControllerIdentifier'] = identifier
 
     def process_MSP_FC_VERSION(self, data):
-        self.mspy.CONFIG['flightControllerVersion'] =  str(self.mspy.readbytes(data, size=8, unsigned=True)) + '.'
-        self.mspy.CONFIG['flightControllerVersion'] += str(self.mspy.readbytes(data, size=8, unsigned=True)) + '.'
-        self.mspy.CONFIG['flightControllerVersion'] += str(self.mspy.readbytes(data, size=8, unsigned=True))
+        self.board.CONFIG['flightControllerVersion'] =  str(self.board.readbytes(data, size=8, unsigned=True)) + '.'
+        self.board.CONFIG['flightControllerVersion'] += str(self.board.readbytes(data, size=8, unsigned=True)) + '.'
+        self.board.CONFIG['flightControllerVersion'] += str(self.board.readbytes(data, size=8, unsigned=True))
 
     def process_MSP_BUILD_INFO(self, data):
         dateLength = 11
         buff = []
         for i in range(dateLength):
-            buff.append(self.mspy.readbytes(data, size=8, unsigned=True))
+            buff.append(self.board.readbytes(data, size=8, unsigned=True))
         
         buff.append(32) # ascii space
 
         timeLength = 8
         for i in range(timeLength):
-            buff.append(self.mspy.readbytes(data, size=8, unsigned=True))
+            buff.append(self.board.readbytes(data, size=8, unsigned=True))
 
-        self.mspy.CONFIG['buildInfo'] = bytearray(buff).decode("utf-8")
+        self.board.CONFIG['buildInfo'] = bytearray(buff).decode("utf-8")
 
     def process_MSP_BOARD_INFO(self, data):
         identifier = ''
         for i in range(4):
-            identifier += chr(self.mspy.readbytes(data, size=8, unsigned=True))
+            identifier += chr(self.board.readbytes(data, size=8, unsigned=True))
 
-        self.mspy.CONFIG['boardIdentifier'] = identifier
-        self.mspy.CONFIG['boardVersion'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.CONFIG['boardIdentifier'] = identifier
+        self.board.CONFIG['boardVersion'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        self.mspy.CONFIG['boardType'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['boardType'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        self.mspy.CONFIG['targetName'] = ""
+        self.board.CONFIG['targetName'] = ""
 
-        self.mspy.CONFIG['commCapabilities'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.CONFIG['commCapabilities'] = self.board.readbytes(data, size=8, unsigned=True)
 
-        length = self.mspy.readbytes(data, size=8, unsigned=True)
+        length = self.board.readbytes(data, size=8, unsigned=True)
         
         for i in range(length):
-            self.mspy.CONFIG['targetName'] += chr(self.mspy.readbytes(data, size=8, unsigned=True))
+            self.board.CONFIG['targetName'] += chr(self.board.readbytes(data, size=8, unsigned=True))
 
-        self.mspy.CONFIG['boardName'] = ""
-        self.mspy.CONFIG['manufacturerId'] = ""
-        self.mspy.CONFIG['signature'] = []
-        self.mspy.CONFIG['boardName'] = ""
-        self.mspy.CONFIG['mcuTypeId'] = ""
+        self.board.CONFIG['boardName'] = ""
+        self.board.CONFIG['manufacturerId'] = ""
+        self.board.CONFIG['signature'] = []
+        self.board.CONFIG['boardName'] = ""
+        self.board.CONFIG['mcuTypeId'] = ""
 
         if data:
-            length = self.mspy.readbytes(data, size=8, unsigned=True)
+            length = self.board.readbytes(data, size=8, unsigned=True)
             for i in range(length):
-                self.mspy.CONFIG['boardName'] += chr(self.mspy.readbytes(data, size=8, unsigned=True))
+                self.board.CONFIG['boardName'] += chr(self.board.readbytes(data, size=8, unsigned=True))
 
-            length = self.mspy.readbytes(data, size=8, unsigned=True)
+            length = self.board.readbytes(data, size=8, unsigned=True)
             for i in range(length):
-                self.mspy.CONFIG['manufacturerId'] += chr(self.mspy.readbytes(data, size=8, unsigned=True))
+                self.board.CONFIG['manufacturerId'] += chr(self.board.readbytes(data, size=8, unsigned=True))
 
-            for i in range(self.mspy.SIGNATURE_LENGTH):
-                self.mspy.CONFIG['signature'].append(self.mspy.readbytes(data, size=8, unsigned=True))
+            for i in range(self.board.SIGNATURE_LENGTH):
+                self.board.CONFIG['signature'].append(self.board.readbytes(data, size=8, unsigned=True))
 
-            self.mspy.CONFIG['mcuTypeId'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.CONFIG['mcuTypeId'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_NAME(self, data):
-        self.mspy.CONFIG['name'] = ''
+        self.board.CONFIG['name'] = ''
     
         while len(data)>0:
-            char = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.CONFIG['name'] += chr(char)
+            char = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.CONFIG['name'] += chr(char)
 
     # def process_MSP_SET_CHANNEL_FORWARDING(self, data):
     #     logging.info('Channel forwarding saved')
 
     def process_MSP_CF_SERIAL_CONFIG(self, data):
-        self.mspy.SERIAL_CONFIG['ports'] = []
+        self.board.SERIAL_CONFIG['ports'] = []
         bytesPerPort = 1 + 2 + (1 * 4)
         serialPortCount = int(len(data) / bytesPerPort)
 
         for i in range(serialPortCount):
             serialPort = {
-                'identifier': self.mspy.readbytes(data, size=8, unsigned=True),
-                'functions': self.mspy.serialPortFunctionMaskToFunctions(self.mspy.readbytes(data, size=16, unsigned=True)),
-                'msp_baudrate': self.mspy.BAUD_RATES[self.mspy.readbytes(data, size=8, unsigned=True)],
-                'gps_baudrate': self.mspy.BAUD_RATES[self.mspy.readbytes(data, size=8, unsigned=True)],
-                'telemetry_baudrate': self.mspy.BAUD_RATES[self.mspy.readbytes(data, size=8, unsigned=True)],
-                'blackbox_baudrate': self.mspy.BAUD_RATES[self.mspy.readbytes(data, size=8, unsigned=True)]
+                'identifier': self.board.readbytes(data, size=8, unsigned=True),
+                'functions': self.board.serialPortFunctionMaskToFunctions(self.board.readbytes(data, size=16, unsigned=True)),
+                'msp_baudrate': self.board.BAUD_RATES[self.board.readbytes(data, size=8, unsigned=True)],
+                'gps_baudrate': self.board.BAUD_RATES[self.board.readbytes(data, size=8, unsigned=True)],
+                'telemetry_baudrate': self.board.BAUD_RATES[self.board.readbytes(data, size=8, unsigned=True)],
+                'blackbox_baudrate': self.board.BAUD_RATES[self.board.readbytes(data, size=8, unsigned=True)]
             }
 
-            self.mspy.SERIAL_CONFIG['ports'].append(serialPort)
+            self.board.SERIAL_CONFIG['ports'].append(serialPort)
 
     def process_MSP_SET_CF_SERIAL_CONFIG(self, data):
         logging.info('Serial config saved')
 
     def process_MSP_MODE_RANGES(self, data):
-        self.mspy.MODE_RANGES = [] # empty the array as new data is coming in
+        self.board.MODE_RANGES = [] # empty the array as new data is coming in
 
         modeRangeCount = int(len(data) / 4) # 4 bytes per item.
 
         for i in range(modeRangeCount):
             modeRange = {
-                'id': self.mspy.readbytes(data, size=8, unsigned=True),
-                'auxChannelIndex': self.mspy.readbytes(data, size=8, unsigned=True),
+                'id': self.board.readbytes(data, size=8, unsigned=True),
+                'auxChannelIndex': self.board.readbytes(data, size=8, unsigned=True),
                 'range': {
-                    'start': 900 + (self.mspy.readbytes(data, size=8, unsigned=True) * 25),
-                    'end': 900 + (self.mspy.readbytes(data, size=8, unsigned=True) * 25)
+                    'start': 900 + (self.board.readbytes(data, size=8, unsigned=True) * 25),
+                    'end': 900 + (self.board.readbytes(data, size=8, unsigned=True) * 25)
                             }
                 }
-            self.mspy.MODE_RANGES.append(modeRange)
+            self.board.MODE_RANGES.append(modeRange)
 
     def process_MSP_MODE_RANGES_EXTRA(self, data):
-        self.mspy.MODE_RANGES_EXTRA = [] # empty the array as new data is coming in
+        self.board.MODE_RANGES_EXTRA = [] # empty the array as new data is coming in
 
-        modeRangeExtraCount = self.mspy.readbytes(data, size=8, unsigned=True)
+        modeRangeExtraCount = self.board.readbytes(data, size=8, unsigned=True)
 
         for i in range(modeRangeExtraCount):
             modeRangeExtra = {
-                'id': self.mspy.readbytes(data, size=8, unsigned=True),
-                'modeLogic': self.mspy.readbytes(data, size=8, unsigned=True),
-                'linkedTo': self.mspy.readbytes(data, size=8, unsigned=True)
+                'id': self.board.readbytes(data, size=8, unsigned=True),
+                'modeLogic': self.board.readbytes(data, size=8, unsigned=True),
+                'linkedTo': self.board.readbytes(data, size=8, unsigned=True)
             }
-            self.mspy.MODE_RANGES_EXTRA.append(modeRangeExtra)
+            self.board.MODE_RANGES_EXTRA.append(modeRangeExtra)
 
     def process_MSP_ADJUSTMENT_RANGES(self, data):
-        self.mspy.ADJUSTMENT_RANGES = [] # empty the array as new data is coming in
+        self.board.ADJUSTMENT_RANGES = [] # empty the array as new data is coming in
 
         adjustmentRangeCount = int(len(data) / 6) # 6 bytes per item.
 
         for i in range(adjustmentRangeCount):
             adjustmentRange = {
-                'slotIndex': self.mspy.readbytes(data, size=8, unsigned=True),
-                'auxChannelIndex': self.mspy.readbytes(data, size=8, unsigned=True),
+                'slotIndex': self.board.readbytes(data, size=8, unsigned=True),
+                'auxChannelIndex': self.board.readbytes(data, size=8, unsigned=True),
                 'range': {
-                    'start': 900 + (self.mspy.readbytes(data, size=8, unsigned=True) * 25),
-                    'end': 900 + (self.mspy.readbytes(data, size=8, unsigned=True) * 25)
+                    'start': 900 + (self.board.readbytes(data, size=8, unsigned=True) * 25),
+                    'end': 900 + (self.board.readbytes(data, size=8, unsigned=True) * 25)
                 },
-                'adjustmentFunction': self.mspy.readbytes(data, size=8, unsigned=True),
-                'auxSwitchChannelIndex': self.mspy.readbytes(data, size=8, unsigned=True)
+                'adjustmentFunction': self.board.readbytes(data, size=8, unsigned=True),
+                'auxSwitchChannelIndex': self.board.readbytes(data, size=8, unsigned=True)
             }
-            self.mspy.ADJUSTMENT_RANGES.append(adjustmentRange)
+            self.board.ADJUSTMENT_RANGES.append(adjustmentRange)
 
     def process_MSP_RX_CONFIG(self, data):
-        self.mspy.RX_CONFIG['serialrx_provider'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['serialrx_provider'] = self.board.readbytes(data, size=8, unsigned=True)
         # maxcheck for INAV
-        self.mspy.RX_CONFIG['stick_max'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.RX_CONFIG['stick_max'] = self.board.readbytes(data, size=16, unsigned=True)
         # midrc for INAV
-        self.mspy.RX_CONFIG['stick_center'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.RX_CONFIG['stick_center'] = self.board.readbytes(data, size=16, unsigned=True)
         # mincheck for INAV
-        self.mspy.RX_CONFIG['stick_min'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.RX_CONFIG['spektrum_sat_bind'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RX_CONFIG['rx_min_usec'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.RX_CONFIG['rx_max_usec'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.RX_CONFIG['rcInterpolation'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RX_CONFIG['rcInterpolationInterval'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RX_CONFIG['airModeActivateThreshold'] = self.mspy.readbytes(data, size=16, unsigned=True)  
+        self.board.RX_CONFIG['stick_min'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.RX_CONFIG['spektrum_sat_bind'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['rx_min_usec'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.RX_CONFIG['rx_max_usec'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.RX_CONFIG['rcInterpolation'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['rcInterpolationInterval'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['airModeActivateThreshold'] = self.board.readbytes(data, size=16, unsigned=True)  
         # spirx_protocol for INAV
-        self.mspy.RX_CONFIG['rxSpiProtocol'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['rxSpiProtocol'] = self.board.readbytes(data, size=8, unsigned=True)
         # spirx_id for INAV
-        self.mspy.RX_CONFIG['rxSpiId'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.RX_CONFIG['rxSpiId'] = self.board.readbytes(data, size=32, unsigned=True)
         # spirx_channel_count for INAV
-        self.mspy.RX_CONFIG['rxSpiRfChannelCount'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.RX_CONFIG['fpvCamAngleDegrees'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        if self.mspy.INAV:
-            self.mspy.RX_CONFIG['receiver_type'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['rxSpiRfChannelCount'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.RX_CONFIG['fpvCamAngleDegrees'] = self.board.readbytes(data, size=8, unsigned=True)
+        if self.board.INAV:
+            self.board.RX_CONFIG['receiver_type'] = self.board.readbytes(data, size=8, unsigned=True)
         else:
-            self.mspy.RX_CONFIG['rcInterpolationChannels'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RX_CONFIG['rcSmoothingType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RX_CONFIG['rcSmoothingInputCutoff'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RX_CONFIG['rcSmoothingDerivativeCutoff'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RX_CONFIG['rcSmoothingInputType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.RX_CONFIG['rcSmoothingDerivativeType'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcInterpolationChannels'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcSmoothingType'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcSmoothingInputCutoff'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcSmoothingDerivativeCutoff'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcSmoothingInputType'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.RX_CONFIG['rcSmoothingDerivativeType'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_FAILSAFE_CONFIG(self, data):
-        self.mspy.FAILSAFE_CONFIG['failsafe_delay'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.FAILSAFE_CONFIG['failsafe_off_delay'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.FAILSAFE_CONFIG['failsafe_throttle'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FAILSAFE_CONFIG['failsafe_switch_mode'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.FAILSAFE_CONFIG['failsafe_throttle_low_delay'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FAILSAFE_CONFIG['failsafe_procedure'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_delay'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_off_delay'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_throttle'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_switch_mode'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_throttle_low_delay'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FAILSAFE_CONFIG['failsafe_procedure'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_RXFAIL_CONFIG(self, data):
-        self.mspy.RXFAIL_CONFIG = [] # empty the array as new data is coming in
+        self.board.RXFAIL_CONFIG = [] # empty the array as new data is coming in
 
         channelCount = int(len(data) / 3)
         for i in range(channelCount):
             rxfailChannel = {
-                'mode':  self.mspy.readbytes(data, size=8, unsigned=True),
-                'value': self.mspy.readbytes(data, size=16, unsigned=True)
+                'mode':  self.board.readbytes(data, size=8, unsigned=True),
+                'value': self.board.readbytes(data, size=16, unsigned=True)
             }
-            self.mspy.RXFAIL_CONFIG.append(rxfailChannel)
+            self.board.RXFAIL_CONFIG.append(rxfailChannel)
 
     def process_MSP_ADVANCED_CONFIG(self, data):
-        self.mspy.PID_ADVANCED_CONFIG['gyro_sync_denom'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.PID_ADVANCED_CONFIG['pid_process_denom'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.PID_ADVANCED_CONFIG['use_unsyncedPwm'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.PID_ADVANCED_CONFIG['fast_pwm_protocol'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.PID_ADVANCED_CONFIG['motor_pwm_rate'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.PID_ADVANCED_CONFIG['gyro_sync_denom'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.PID_ADVANCED_CONFIG['pid_process_denom'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.PID_ADVANCED_CONFIG['use_unsyncedPwm'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.PID_ADVANCED_CONFIG['fast_pwm_protocol'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.PID_ADVANCED_CONFIG['motor_pwm_rate'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        self.mspy.PID_ADVANCED_CONFIG['digitalIdlePercent'] = self.mspy.readbytes(data, size=16, unsigned=True) / 100
+        self.board.PID_ADVANCED_CONFIG['digitalIdlePercent'] = self.board.readbytes(data, size=16, unsigned=True) / 100
 
     def process_MSP_FILTER_CONFIG(self, data):
-        self.mspy.FILTER_CONFIG['gyro_lowpass_hz'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.FILTER_CONFIG['dterm_lowpass_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FILTER_CONFIG['yaw_lowpass_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['gyro_lowpass_hz'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.FILTER_CONFIG['dterm_lowpass_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['yaw_lowpass_hz'] = self.board.readbytes(data, size=16, unsigned=True)
         
-        self.mspy.FILTER_CONFIG['gyro_notch_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FILTER_CONFIG['gyro_notch_cutoff'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FILTER_CONFIG['dterm_notch_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FILTER_CONFIG['dterm_notch_cutoff'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['gyro_notch_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['gyro_notch_cutoff'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['dterm_notch_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['dterm_notch_cutoff'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        self.mspy.FILTER_CONFIG['gyro_notch2_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.FILTER_CONFIG['gyro_notch2_cutoff'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['gyro_notch2_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.FILTER_CONFIG['gyro_notch2_cutoff'] = self.board.readbytes(data, size=16, unsigned=True)
 
-        if not self.mspy.INAV:
-            self.mspy.FILTER_CONFIG['dterm_lowpass_type'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:
+            self.board.FILTER_CONFIG['dterm_lowpass_type'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.FILTER_CONFIG['gyro_hardware_lpf'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_hardware_lpf'] = self.board.readbytes(data, size=8, unsigned=True)
             
-            self.mspy.readbytes(data, size=8, unsigned=True) # must consume this byte
+            self.board.readbytes(data, size=8, unsigned=True) # must consume this byte
 
-            self.mspy.FILTER_CONFIG['gyro_lowpass_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyro_lowpass2_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyro_lowpass_type'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyro_lowpass2_type'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.FILTER_CONFIG['dterm_lowpass2_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass2_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass_type'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass2_type'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.FILTER_CONFIG['dterm_lowpass2_hz'] = self.board.readbytes(data, size=16, unsigned=True)
 
-            self.mspy.FILTER_CONFIG['gyro_32khz_hardware_lpf'] = 0
+            self.board.FILTER_CONFIG['gyro_32khz_hardware_lpf'] = 0
 
-            self.mspy.FILTER_CONFIG['dterm_lowpass2_type'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyro_lowpass_dyn_min_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyro_lowpass_dyn_max_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['dterm_lowpass_dyn_min_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['dterm_lowpass_dyn_max_hz'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['dterm_lowpass2_type'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass_dyn_min_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['gyro_lowpass_dyn_max_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['dterm_lowpass_dyn_min_hz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['dterm_lowpass_dyn_max_hz'] = self.board.readbytes(data, size=16, unsigned=True)
         else:
-            self.mspy.FILTER_CONFIG['accNotchHz'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['accNotchCutoff'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.FILTER_CONFIG['gyroStage2LowpassHz'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['accNotchHz'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['accNotchCutoff'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.FILTER_CONFIG['gyroStage2LowpassHz'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_SET_PID_ADVANCED(self, data):
         logging.info("Advanced PID settings saved")
 
     def process_MSP_PID_ADVANCED(self, data):
-        self.mspy.ADVANCED_TUNING['rollPitchItermIgnoreRate'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.ADVANCED_TUNING['yawItermIgnoreRate'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.ADVANCED_TUNING['yaw_p_limit'] = self.mspy.readbytes(data, size=16, unsigned=True)
-        self.mspy.ADVANCED_TUNING['deltaMethod'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.ADVANCED_TUNING['vbatPidCompensation'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        if not self.mspy.INAV:
-            self.mspy.ADVANCED_TUNING['feedforwardTransition'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.ADVANCED_TUNING['rollPitchItermIgnoreRate'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.ADVANCED_TUNING['yawItermIgnoreRate'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.ADVANCED_TUNING['yaw_p_limit'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.ADVANCED_TUNING['deltaMethod'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.ADVANCED_TUNING['vbatPidCompensation'] = self.board.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:
+            self.board.ADVANCED_TUNING['feedforwardTransition'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['dtermSetpointWeight'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['toleranceBand'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['toleranceBandReduction'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['itermThrottleGain'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['pidMaxVelocity'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['pidMaxVelocityYaw'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['dtermSetpointWeight'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['toleranceBand'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['toleranceBandReduction'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['itermThrottleGain'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['pidMaxVelocity'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['pidMaxVelocityYaw'] = self.board.readbytes(data, size=16, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['levelAngleLimit'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['levelSensitivity'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['levelAngleLimit'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['levelSensitivity'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['itermThrottleThreshold'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['itermAcceleratorGain'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['itermThrottleThreshold'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['itermAcceleratorGain'] = self.board.readbytes(data, size=16, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['dtermSetpointWeight'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['dtermSetpointWeight'] = self.board.readbytes(data, size=16, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['itermRotation'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['smartFeedforward'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['itermRelax'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['itermRelaxType'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['absoluteControlGain'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['throttleBoost'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['acroTrainerAngleLimit'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['feedforwardRoll']  = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['feedforwardPitch'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['feedforwardYaw']   = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['antiGravityMode']  = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['itermRotation'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['smartFeedforward'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['itermRelax'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['itermRelaxType'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['absoluteControlGain'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['throttleBoost'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['acroTrainerAngleLimit'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['feedforwardRoll']  = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['feedforwardPitch'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['feedforwardYaw']   = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['antiGravityMode']  = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.ADVANCED_TUNING['dMinRoll'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['dMinPitch'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['dMinYaw'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['dMinGain'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['dMinAdvance'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['useIntegratedYaw'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['integratedYawRelax'] = self.mspy.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dMinRoll'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dMinPitch'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dMinYaw'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dMinGain'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dMinAdvance'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['useIntegratedYaw'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['integratedYawRelax'] = self.board.readbytes(data, size=8, unsigned=True)
         else:
-            self.mspy.ADVANCED_TUNING['setpointRelaxRatio'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['dtermSetpointWeight'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['pidSumLimit'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['itermThrottleGain'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.ADVANCED_TUNING['axisAccelerationLimitRollPitch'] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.ADVANCED_TUNING['axisAccelerationLimitYaw'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['setpointRelaxRatio'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['dtermSetpointWeight'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['pidSumLimit'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['itermThrottleGain'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.ADVANCED_TUNING['axisAccelerationLimitRollPitch'] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.ADVANCED_TUNING['axisAccelerationLimitYaw'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_SENSOR_CONFIG(self, data):
-        self.mspy.SENSOR_CONFIG['acc_hardware'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SENSOR_CONFIG['baro_hardware'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SENSOR_CONFIG['mag_hardware'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        if self.mspy.INAV:
-            self.mspy.SENSOR_CONFIG['pitot'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.SENSOR_CONFIG['rangefinder'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.SENSOR_CONFIG['opflow'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_CONFIG['acc_hardware'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_CONFIG['baro_hardware'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SENSOR_CONFIG['mag_hardware'] = self.board.readbytes(data, size=8, unsigned=True)
+        if self.board.INAV:
+            self.board.SENSOR_CONFIG['pitot'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_CONFIG['rangefinder'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.SENSOR_CONFIG['opflow'] = self.board.readbytes(data, size=8, unsigned=True)
 
     def process_MSP_DATAFLASH_SUMMARY(self, data):
-        flags = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.DATAFLASH['ready'] = ((flags & 1) != 0)
-        self.mspy.DATAFLASH['supported'] = ((flags & 2) != 0)
-        self.mspy.DATAFLASH['sectors'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.DATAFLASH['totalSize'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.DATAFLASH['usedSize'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        flags = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.DATAFLASH['ready'] = ((flags & 1) != 0)
+        self.board.DATAFLASH['supported'] = ((flags & 2) != 0)
+        self.board.DATAFLASH['sectors'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.DATAFLASH['totalSize'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.DATAFLASH['usedSize'] = self.board.readbytes(data, size=32, unsigned=True)
         # update_dataflash_global();
 
     def process_MSP_DATAFLASH_ERASE(self, data):
         logging.info("Data flash erase begun...")
 
     def process_MSP_SDCARD_SUMMARY(self, data):
-        flags = self.mspy.readbytes(data, size=8, unsigned=True)
+        flags = self.board.readbytes(data, size=8, unsigned=True)
 
-        self.mspy.SDCARD['supported'] = ((flags & 0x01) != 0)
-        self.mspy.SDCARD['state'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SDCARD['filesystemLastError'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.SDCARD['freeSizeKB'] = self.mspy.readbytes(data, size=32, unsigned=True)
-        self.mspy.SDCARD['totalSizeKB'] = self.mspy.readbytes(data, size=32, unsigned=True)
+        self.board.SDCARD['supported'] = ((flags & 0x01) != 0)
+        self.board.SDCARD['state'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SDCARD['filesystemLastError'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.SDCARD['freeSizeKB'] = self.board.readbytes(data, size=32, unsigned=True)
+        self.board.SDCARD['totalSizeKB'] = self.board.readbytes(data, size=32, unsigned=True)
 
     def process_MSP_BLACKBOX_CONFIG(self, data):
-        if not self.mspy.INAV:
-            self.mspy.BLACKBOX['supported'] = (self.mspy.readbytes(data, size=8, unsigned=True) & 1) != 0
-            self.mspy.BLACKBOX['blackboxDevice'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.BLACKBOX['blackboxRateNum'] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.BLACKBOX['blackboxRateDenom'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        if not self.board.INAV:
+            self.board.BLACKBOX['supported'] = (self.board.readbytes(data, size=8, unsigned=True) & 1) != 0
+            self.board.BLACKBOX['blackboxDevice'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.BLACKBOX['blackboxRateNum'] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.BLACKBOX['blackboxRateDenom'] = self.board.readbytes(data, size=8, unsigned=True)
 
-            self.mspy.BLACKBOX['blackboxPDenom'] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.BLACKBOX['blackboxPDenom'] = self.board.readbytes(data, size=16, unsigned=True)
         else:
             pass # API no longer supported (INAV 2.3.0)
 
@@ -922,40 +920,40 @@ class processMSP():
         logging.info("Blackbox config saved")
 
     def process_MSP_MOTOR_TELEMETRY(self, data):
-        motorCount = self.mspy.readbytes(data, size=8, unsigned=True)
+        motorCount = self.board.readbytes(data, size=8, unsigned=True)
         for i in range(motorCount):
-            self.mspy.MOTOR_TELEMETRY_DATA['rpm'][i] = self.mspy.readbytes(data, size=32, unsigned=True)
-            self.mspy.MOTOR_TELEMETRY_DATA['invalidPercent'][i] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MOTOR_TELEMETRY_DATA['temperature'][i] = self.mspy.readbytes(data, size=8, unsigned=True)
-            self.mspy.MOTOR_TELEMETRY_DATA['voltage'][i] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MOTOR_TELEMETRY_DATA['current'][i] = self.mspy.readbytes(data, size=16, unsigned=True)
-            self.mspy.MOTOR_TELEMETRY_DATA['consumption'][i] = self.mspy.readbytes(data, size=16, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['rpm'][i] = self.board.readbytes(data, size=32, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['invalidPercent'][i] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['temperature'][i] = self.board.readbytes(data, size=8, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['voltage'][i] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['current'][i] = self.board.readbytes(data, size=16, unsigned=True)
+            self.board.MOTOR_TELEMETRY_DATA['consumption'][i] = self.board.readbytes(data, size=16, unsigned=True)
 
     # TODO: This changed and it will need to check the BF version to decode things correctly
     # def process_MSP_TRANSPONDER_CONFIG(self, data):
     #     bytesRemaining = len(data)
 
-    #     providerCount = self.mspy.readbytes(data, size=8, unsigned=True)
+    #     providerCount = self.board.readbytes(data, size=8, unsigned=True)
     #     bytesRemaining-=1
 
-    #     self.mspy.TRANSPONDER['supported'] = providerCount > 0
-    #     self.mspy.TRANSPONDER['providers'] = []
+    #     self.board.TRANSPONDER['supported'] = providerCount > 0
+    #     self.board.TRANSPONDER['providers'] = []
 
     #     for i in range(providerCount):
     #         provider = {
-    #             'id': self.mspy.readbytes(data, size=8, unsigned=True),
-    #             'dataLength': self.mspy.readbytes(data, size=8, unsigned=True)
+    #             'id': self.board.readbytes(data, size=8, unsigned=True),
+    #             'dataLength': self.board.readbytes(data, size=8, unsigned=True)
     #         }
     #         bytesRemaining -= 2
 
-    #         self.mspy.TRANSPONDER['providers'].append(provider)
+    #         self.board.TRANSPONDER['providers'].append(provider)
 
-    #     self.mspy.TRANSPONDER['provider'] = self.mspy.readbytes(data, size=8, unsigned=True)
+    #     self.board.TRANSPONDER['provider'] = self.board.readbytes(data, size=8, unsigned=True)
     #     bytesRemaining-=1
 
-    #     self.mspy.TRANSPONDER['data'] = []
+    #     self.board.TRANSPONDER['data'] = []
     #     for i in range(bytesRemaining):
-    #         self.mspy.TRANSPONDER['data'].append(self.mspy.readbytes(data, size=8, unsigned=True))
+    #         self.board.TRANSPONDER['data'].append(self.board.readbytes(data, size=8, unsigned=True))
 
     def process_MSP_SET_TRANSPONDER_CONFIG(self, data):
         logging.info("Transponder config saved")
@@ -970,7 +968,7 @@ class processMSP():
         logging.info('Board alignment saved')
         
     def process_MSP_PID_CONTROLLER(self, data):
-        self.mspy.PID['controller'] = self.mspy.readbytes(data, size=8, unsigned=True)
+        self.board.PID['controller'] = self.board.readbytes(data, size=8, unsigned=True)
         
     def process_MSP_SET_PID_CONTROLLER(self, data):
         logging.info('PID controller changed')
@@ -1048,9 +1046,26 @@ class processMSP():
     # unavlib new functions below
 
     def process_MSP_NAV_STATUS(self,data):
-        self.mspy.NAV_STATUS['mode'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.NAV_STATUS['state'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.NAV_STATUS['active_wp_action'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.NAV_STATUS['active_wp_number'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.NAV_STATUS['error'] = self.mspy.readbytes(data, size=8, unsigned=True)
-        self.mspy.NAV_STATUS['heading_hold_target'] = self.mspy.readbytes(data, size=16, unsigned=True)
+        self.board.NAV_STATUS['mode'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['state'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['active_wp_action'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['active_wp_number'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['error'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['heading_hold_target'] = self.board.readbytes(data, size=16, unsigned=True)
+
+    def process_MSP_WP(self, data):
+        self.board.WP['wp_no'] = self.board.readbytes(data, size=8, unsigned=True)      
+        self.board.WP['wp_action'] = self.board.readbytes(data, size=8, unsigned=True)   
+        self.board.WP['lat'] = self.board.readbytes(data, size=32, unsigned=False)   
+        self.board.WP['lon'] = self.board.readbytes(data, size=32, unsigned=False)  
+        self.board.WP['alt'] = self.board.readbytes(data, size=32, unsigned=False)  
+        self.board.WP['p1'] = self.board.readbytes(data, size=16, unsigned=False)   
+        self.board.WP['p2'] = self.board.readbytes(data, size=16, unsigned=False)  
+        self.board.WP['p3'] = self.board.readbytes(data, size=16, unsigned=False)  
+        self.board.WP['flag'] = self.board.readbytes(data, size=8, unsigned=True)   
+
+    def process_MSP_WP_GETINFO(self,data):
+        self.board.WP_INFO["reserved"] = self.board.readbytes(data, size=8, unsigned=True),   
+        self.board.WP_INFO["NAV_MAX_WAYPOINTS"] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.WP_INFO["isWaypointListValid"] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.WP_INFO["WaypointCount"] = self.board.readbytes(data, size=8, unsigned=True)   

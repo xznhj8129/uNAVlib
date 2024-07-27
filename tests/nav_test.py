@@ -1,5 +1,8 @@
 import struct
 from unavlib import MSPy
+from unavlib.modules.utils import dict_reverse
+
+R_MSPCodes = dict_reverse(MSPy.MSPCodes)
 
 # Define a function to pack data into the MSP waypoint structure
 def pack_msp_wp(wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
@@ -16,11 +19,11 @@ def send(board, msg_code, data=[]):
         board.process_recv_data(dataHandler)
         return dataHandler
 
-wp_no = 2
+wp_no = 1
 action = 1 
 lat = int(55.732110 * 1e7)  
 lon = int(-17.119426 * 1e7)
-alt = 4200  # Altitude in cm as per INAV's handling (if 42 meters, it's 4200 cm).
+alt = 5000  # Altitude in cm as per INAV's handling (if 42 meters, it's 4200 cm).
 p1 = 1200   
 p2 = 0     
 p3 = 0      
@@ -31,24 +34,30 @@ hex_string = ' '.join(f"{byte:02x}" for byte in packed_wp)
 print(hex_string)
 ret = {}
 
-with MSPy(device='/dev/ttyACM0', loglevel='DEBUG', baudrate=115200) as board:
+#####
+# DO NOT CONNECT TO THE HITL PORT
+#####
+with MSPy(device='/dev/ttyUSB0', loglevel='DEBUG', baudrate=115200) as board:
     if board == 1: # an error occurred...
         raise Exception('Connection error')
 
     try:
         print()
-        print('MSP_SET_WP')
-        ret = send(board, 'MSP_SET_WP', data=packed_wp)
-        print(ret)
-        if len(ret['dataView'])>0:
-            print(unpack_msp_wp(ret['dataView']))
-        else:
-            print('return len 0')
+        try1 = True
+        if try1:
+            print('MSP_SET_WP')
+            ret = send(board, 'MSP_SET_WP', data=packed_wp)
+            print(ret)
+            if len(ret['dataView'])>0:
+                print(unpack_msp_wp(ret['dataView']))
+            else:
+                print('return len 0')
 
         print()
         print('MSP_WP_GETINFO')
         # https://github.com/iNavFlight/inav/blob/master/src/main/fc/fc_msp.c#L1423
-        ret = send(board, 'MSP_WP_GETINFO', data=[])
+        board.send_RAW_msg(MSPy.MSPCodes['MSP_WP_GETINFO'], data=[])
+        ret = board.receive_msg()
         print(ret)
         data = struct.unpack('<BBBB', ret['dataView'])
         jsondat = {
@@ -64,7 +73,9 @@ with MSPy(device='/dev/ttyACM0', loglevel='DEBUG', baudrate=115200) as board:
         print('MSP_WP')
         # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
         for i in range(1,jsondat['WaypointCount']+1):
-            ret = send(board, 'MSP_WP', data=struct.pack('B', i))
+            board.send_RAW_msg(MSPy.MSPCodes['MSP_WP'],  data=struct.pack('B', i))
+            ret = board.receive_msg()
+            print(ret)
             b = unpack_msp_wp(ret['dataView'])
             print(i, b)
 

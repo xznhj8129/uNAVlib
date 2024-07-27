@@ -20,6 +20,8 @@ from unavlib.control import geospatial
 
 async def my_plan(uav):
 
+    set_alt = 50
+
     uav.debugprint = False
     #uav.modes.keys() # show all currently programmed modes
     # create new supermode (combination of multiple modes)
@@ -38,9 +40,9 @@ async def my_plan(uav):
     uav.set_rc_channel('throttle',2000)
     uavalt = uav.get_altitude()
     t=0
-    while uavalt<2:
-        uav.set_rc_channel('throttle',2000)
-        uav.set_rc_channel('pitch',1300)
+    while uavalt<set_alt :
+        uav.set_rc_channel('throttle',2100)
+        uav.set_rc_channel('pitch',1100)
         uavspeed = uav.get_gps_data()['speed']
         uavalt = uav.get_altitude()
         print('Speed:', uavspeed,'Alt:', uavalt)
@@ -55,7 +57,8 @@ async def my_plan(uav):
 
     # set waypoint and fly auto
     uav.set_supermode("GOTO", on=True)
-    await asyncio.sleep(2)
+    while "GCS NAV" not in uav.get_active_modes():
+        await asyncio.sleep(1)
     wp = geospatial.GPSposition(45.487363, -73.812242, 20)
     uav.set_wp(255, 1, wp.lat, wp.lon, 100, 0, 0, 0, 0)
     print(f"Navstatus: {uav.get_nav_status()}")
@@ -73,7 +76,7 @@ async def my_plan(uav):
         gyro = uav.get_attitude()
 
         print('\n')
-        #print('Modes:', uav.board.CONFIG['mode'], uav.board.process_mode(uav.board.CONFIG['mode']))
+        print('Channels:', uav.channels)
         print('Active modes:', uav.get_active_modes())
         print('Position:', pos)
         print('Attitude:', gyro)

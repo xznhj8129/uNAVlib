@@ -63,7 +63,8 @@ async def my_plan(uav):
     uav.set_supermode("GOTO", on=True)
     await asyncio.sleep(2)
     wp = geospatial.GPSposition(45.487363, -73.812242, 20)
-    uav.set_wp(255, 1, wp.lat, wp.lon, 100, 0, 0, 0, 0)
+    a = uav.set_wp(255, 1, wp.lat, wp.lon, 100, 0, 0, 0, 0)
+    print('wp set ret:',a)
     print(f"Navstatus: {uav.get_nav_status()}")
 
     gpsd = uav.get_gps_data()

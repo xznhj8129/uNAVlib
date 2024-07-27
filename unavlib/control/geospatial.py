@@ -20,6 +20,22 @@ class PosVector():
     def __str__(self):
         s = "Distance: {:.3f} Azimuth: {:.3f} Elevation: {:.3f}".format(self.dist, self.az, self.elev)
         return s
+
+class Waypoint():
+    def __init__(self, wp_no, action, lat, lon, alt, p1, p2, p3, flag):
+        self.pos = GPSposition(lat,lon,alt)
+        self.wp_no = wp_no
+        self.action = action
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
+        self.flag = flag
+    def __str__(self):
+        s = f"WP No.: {self.wp_no} {self.pos} Action: {self.action} P1: {self.p1} P2: {self.p2} P3: {self.p3} Flag: {self.flag}"
+        return s
+    def packed(self):
+        msp_wp = struct.pack('<BBiiihhhB', self.wp_no, self.action, int(self.pos.lat * 1e7), int(self.pos.lon * 1e7), altitude*100, p1, p2, p3, flag)
+        return msp_wp
     
 def latlon_to_mgrs(latlon):
     milobj = mgrs.MGRS()

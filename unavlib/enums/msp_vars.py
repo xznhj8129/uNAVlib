@@ -484,3 +484,22 @@ INAV_MIXER = {
 NAV_CONFIG = {
 
 }
+
+WP = {
+    'wp_no': 0,
+    'wp_action': 0,
+    'lat': 0,
+    'lon': 0,
+    'alt': 0,
+    'p1': 0,
+    'p2': 0,
+    'p3': 0,
+    'flag': 0
+}
+
+WP_INFO = {
+    "reserved":0,
+    "NAV_MAX_WAYPOINTS": 0,
+    "isWaypointListValid": 0,
+    "WaypointCount": 0
+}

@@ -6,7 +6,6 @@ from unavlib.control import geospatial
 
 async def telemetry_display(uav):
     #uav.debugprint = True
-    print(uav.board.AUX_CONFIG)
     while 1:
         gpsd = uav.get_gps_data()
         speed = gpsd['speed']
@@ -15,17 +14,18 @@ async def telemetry_display(uav):
         gyro = uav.get_attitude()
         print('\n')
         print("Channels:",uav.channels)
-        print('Modes:', uav.get_active_modes())
+        print('Modes:', uav.board.CONFIG['mode'], uav.get_active_modes())
         print('Position:', pos)
         print('Attitude:', gyro)
         print('Altitude:', alt)
+        print(f"Navstatus: {uav.get_nav_status()}")
 
         await asyncio.sleep(1)
     uav.stop()
 
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
-
+    mydrone.msp_override_channels=[1, 2, 3, 4, 13]
     try:
         await mydrone.connect()
         print("Connected to the flight controller")

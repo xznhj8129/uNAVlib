@@ -69,6 +69,7 @@ class UAVControl:
         self.imu = {}
         self.alt = {}
         self.nav_status = {}
+        self.mission = [None]*255
 
     def stop(self):
         self.run = False
@@ -162,11 +163,16 @@ class UAVControl:
         channels = [[]] * 18
         for i in mranges:
             modename = self.board.R_modesID_INAV[i[0]]
-            ch = i[1]
+            auxn = i[1]
+            ch = auxn+5
             valmin = 900+(i[2]*25)
             valmax = 900+(i[3]*25)
-            print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}".format(i[0], modename, ch, ch+5, valmin, valmax))
-            self.modes[modename] = [ch+5,[valmin, valmax]]
+            if ch in self.msp_override_channels:
+                or_flag = "OVERRIDE ALLOWED"
+            else:
+                or_flag = ""
+            print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}\t{}".format(i[0], modename, auxn, ch, valmin, valmax, or_flag))
+            self.modes[modename] = [ch,[valmin, valmax]]
 
     def load_modes_config_file(self, mode_config_file): 
         with open(mode_config_file,"r") as file:
@@ -216,10 +222,6 @@ class UAVControl:
             del self.active_modes[self.active_modes.index(mode)]
 
     def get_active_modes(self):
-        # re-do this to just find active modes from current RC channel values
-        # also flags, how do they work
-        # it works?????
-
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
         #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
         #for i in self.active_modes:
@@ -350,7 +352,58 @@ class UAVControl:
                                 flag)
         ret = self.std_send('MSP_SET_WP', data=msp_wp)
         if len(ret['dataView'])>0:
-            return self.unpack_msp_wp(ret['dataView']) # parse me
+            b = self.unpack_msp_wp(ret['dataView'])
+            wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
+            return wp
+        else:
+            print("uavcontrol.set_wp: Waypoint not set")
+
+    def _set_wp(self, wp):
+        msp_wp = self.pack_msp_wp(wp.wp_no, 
+                                wp.action, 
+                                int(wp.pos.lat * 1e7), 
+                                int(wp.pos.lon * 1e7), 
+                                wp.pos.alt*100, 
+                                wp.p1, 
+                                wp.p2, 
+                                wp.p3, 
+                                wp.flag)
+        ret = self.std_send('MSP_SET_WP', data=msp_wp)
+        if len(ret['dataView'])>0:
+            b = self.unpack_msp_wp(ret['dataView'])
+            wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
+            return wp
+        else:
+            print("uavcontrol.set_wp: Waypoint not set")
+
+    def get_wp(self,wp_no):
+        # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
+        ret = self.std_send('MSP_WP', data=struct.pack('B', wp_no))
+        if ret:
+            wp = geospatial.Waypoint(
+                self.board.WP['wp_no'],
+                self.board.WP['wp_action'], 
+                float(self.board.WP['lat']) / 1e7, 
+                float(self.board.WP['lon']) / 1e7, 
+                float(self.board.WP['alt']) / 100, 
+                self.board.WP['p1'], 
+                self.board.WP['p2'],
+                self.board.WP['p3'], 
+                self.board.WP['flag']
+                )
+            return wp
+        else:
+            return None
+
+    def get_wp_info(self):
+        ret = self.std_send('MSP_WP_GETINFO', data=[])
+        if ret:
+            return {
+                "reserved": self.board.WP_INFO["reserved"],
+                "nav_max_waypoints": self.board.WP_INFO["NAV_MAX_WAYPOINTS"],
+                "isWaypointListValid": self.board.WP_INFO["isWaypointListValid"] ,
+                "WaypointCount": self.board.WP_INFO["WaypointCount"]
+            }
 
 
     async def flight_loop(self):
@@ -383,7 +436,7 @@ class UAVControl:
                             'MSP_STATUS_EX',
                             'MSP_BATTERY_CONFIG', 
                             'MSP_BATTERY_STATE', 
-                            #'MSP_BOXIDS',  #instead of MSP_BOXNAMES
+                            'MSP_BOXIDS',  #instead of MSP_BOXNAMES
                             'MSP2_INAV_STATUS', 
                             'MSP2_INAV_ANALOG',
                             'MSP_VOLTAGE_METER_CONFIG',

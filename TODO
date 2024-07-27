@@ -20,11 +20,8 @@
 
 - Implement missing necessary MSP messages in process.py
     Priority messages to implement:
-        MSP_ACTIVEBOXES
-        MSP_WP
         MSP_WP_MISSION_LOAD
         MSP_WP_MISSION_SAVE
-        MSP_WP_GETINFO
         MSP_NAV_CONFIG
         MSP_SET_WP
         MSP_SET_HEAD
@@ -172,6 +169,8 @@
     
     Done:
         MSP_NAV_STATUS
+        MSP_WP
+        MSP_WP_GETINFO
 
     Ignored:
         to be figured out

@@ -24,7 +24,6 @@ class MSPy:
     SIGNATURE_LENGTH = 32
     MSPCodes = msp_codes.MSPCodes
     R_MSPCodes = dict_reverse(MSPCodes)
-    R_modesID_INAV = dict_reverse(inav_enums.modesID_INAV)
 
     def __init__(self, device, baudrate=115200, trials=1, 
                  logfilename='MSPy.log', logfilemode='a', loglevel='INFO', timeout=1/100,
