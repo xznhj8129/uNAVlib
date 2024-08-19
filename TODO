@@ -18,6 +18,8 @@
 
 - Test proxy and make it work
 
+- Thouroughly test SITL
+
 - Implement missing necessary MSP messages in process.py
     Priority messages to implement:
         MSP_WP_MISSION_LOAD
