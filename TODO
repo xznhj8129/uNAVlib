@@ -1,8 +1,12 @@
-- Failsafe detection, handling and bypass?
+- Failsafe detection and handling
+
+- Handle different platform types
 
 - Mode handling a bit of a mess, learn how the binary flags work and fix mismatch 
 
 - Leave code translation in UAVControl, or translate directly in MSPy?
+
+- Refactor enums and process variables to class-types because dicts are a mess
 
 - MSPy refactor part 2
     1. put enums and vars seperated in proper place within MSPy
@@ -25,7 +29,6 @@
         MSP_WP_MISSION_LOAD
         MSP_WP_MISSION_SAVE
         MSP_NAV_CONFIG
-        MSP_SET_WP
         MSP_SET_HEAD
         MSP_SET_HEADING
         MSP_SONAR_ALTITUDE

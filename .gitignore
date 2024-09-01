@@ -113,6 +113,7 @@ original__init__.py
 old_readme.md
 diagram.drawio
 .$diagram.drawio.dtmp
+.$diagram.drawio.bkp
 /docs
 Doxyfile
 

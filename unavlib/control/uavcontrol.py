@@ -26,7 +26,7 @@ from unavlib.modules import msp_ctrl
 from unavlib.modules.boardconn import connMSP
 from unavlib.modules.process import processMSP
 from unavlib.modules.fast_functions import fastMSP
-from unavlib.control import geospatial
+from unavlib.modules import geospatial
 from unavlib import MSPy
 
 class UAVControl:
@@ -53,7 +53,7 @@ class UAVControl:
         self.active_supermodes = []
         self.pids = {}
         self.msp_receiver = False
-        self.override_active = False
+        self.msp_override_active = False
         self.msp_override_channels = []
         self.mspy_min_time_between_writes = 1/100
         self.mspy_loglevel='INFO'
@@ -209,7 +209,7 @@ class UAVControl:
         return armed
 
     def set_mode(self, mode:str, on:bool): # this needs to be more robust to handle when a mode is switched off
-        if on and mode not in self.get_active_modes():
+        if on and mode not in self.get_active_modes() :
             print(mode,'on')
             modemean = mean(self.modes[mode][1])
             modech = self.modes[mode][0]-1
@@ -223,11 +223,27 @@ class UAVControl:
 
     def get_active_modes(self):
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
+        if "MSP RC OVERRIDE" not in boardmodes and "MSP RC OVERRIDE" in self.active_modes:
+            boardmodes.append("MSP RC OVERRIDE")
         #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
         #for i in self.active_modes:
         #    if i not in excluded and i not in boardmodes:
         #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
         return  boardmodes#self.active_modes
+
+    def is_override_active(self):
+        if "MSP RC OVERRIDE" in self.active_modes:
+            return True
+        else:
+            modemean = mean(self.modes["MSP RC OVERRIDE"][1])
+            ch = self.modes["MSP RC OVERRIDE"][0]-1
+            chval = self.board.RC['channels'][ch]
+            chrange = self.modes["MSP RC OVERRIDE"][1]
+            if chval >= chrange[0] and chval <= chrange[1]:
+                return True
+            else:
+                return False
+
 
     def new_supermode(self, name:str, modes:list):
         for i in modes:
@@ -474,7 +490,8 @@ class UAVControl:
                 #
                 # IMPORTANT MESSAGES (CTRL_LOOP_TIME based)
                 #
-                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME and "MSP RC OVERRIDE" in self.active_modes:
+                self.msp_override_active = self.is_override_active()
+                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME and self.msp_override_active:
                     last_loop_time = time.time()
                     # Send the RC channel values to the FC
                     if self.board.send_RAW_RC(self.channels):

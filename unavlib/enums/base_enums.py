@@ -113,7 +113,7 @@ modesID_INAV = {
     "ANG HOLD": 64,
 }
 
-flyingPlatformType  = {
+platformType  = {
     "PLATFORM_MULTIROTOR": 0,
     "PLATFORM_AIRPLANE": 1,
     "PLATFORM_HELICOPTER": 2,

@@ -1,11 +1,10 @@
 import asyncio
 import time
 from unavlib.control import UAVControl
-from unavlib.control import geospatial
+from unavlib.modules import geospatial
 
 # Example Mission and use of UAVControl class
 # Work in progress
-# Uses X-Plane 11 HITL starting from Montreal Intl Airport
 # set msp_override_channels =  14399
 # Use receiver type MSP, set serialport below to your telemetry port (ie: USB-TTL converter)
 # Mode settings:
@@ -80,7 +79,6 @@ async def my_plan(uav):
         gyro = uav.get_attitude()
 
         print('\n')
-        #print('Modes:', uav.board.CONFIG['mode'], uav.board.process_mode(uav.board.CONFIG['mode']))
         print('Active modes:', uav.get_active_modes())
         print('Position:', pos)
         print('Attitude:', gyro)
