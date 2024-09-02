@@ -80,8 +80,21 @@ GPS_DATA = {
     'cno':                        []
 }
 
-ANALOG = {}
-ANALOG['voltage'] = 0.0
+ANALOG = {
+    'battery_full_when_plugged_in': True,
+    'use_capacity_thresholds': True,
+    'battery_state': 0,
+    'cell_count': 0,
+    'power': 0,
+    'voltage': 0.0,
+    'mAhdrawn': 0,
+    'mWhdrawn': 0,
+    'battery_remaining_capacity': 0.0,
+    'battery_percentage': 0,
+    'rssi': 0,
+    'amperage': 0,
+    'last_received_timestamp': 0
+}
 
 VOLTAGE_METERS = []
 
@@ -89,7 +102,12 @@ CURRENT_METERS = []
 
 BATTERY_STATE = {
     'cellCount':                  0,
-}
+    'capacity':                   0,
+    'mAhDrawn':                   0,
+    'amperage':                   0,
+    'batteryState':               0,
+    'voltage':                    0,
+} 
 
 SENSOR_ALIGNMENT = {
     'align_gyro':                 0,

@@ -33,6 +33,8 @@ class UAVControl:
     def __init__(self, device, baudrate, use_tcp=False, platform="AIRPLANE"):
         self.debugprint = False
         self.board = MSPy(device=device, loglevel='DEBUG', use_tcp=use_tcp, baudrate=baudrate)  # MSPy instance
+        self.msp = self.board.msp
+        self.inav = self.board.inav
         self.run = True
         self.connected = None
         self.device = device
@@ -93,9 +95,9 @@ class UAVControl:
     def reboot(self): # implement auto-reconnect
         pass
 
-    def std_send(self, msg_code:str, data=[]):
+    def std_send(self, msg_code:int, data=[]):
         # wrap the following used literally everywhere in the code
-        if self.board.send_RAW_msg(self.board.MSPCodes[msg_code], data=data, blocking=None, timeout=None, flush=False):
+        if self.board.send_RAW_msg(msg_code, data=data, blocking=None, timeout=None, flush=False):
             dataHandler = self.board.receive_msg()
             self.board.process_recv_data(dataHandler)
             return dataHandler
@@ -133,7 +135,7 @@ class UAVControl:
     def load_modes_config(self):
         mranges = []
         msg_processed = False
-        code_value = self.board.MSPCodes['MSP_MODE_RANGES']
+        code_value = self.msp.MSP_MODE_RANGES
 
         while not msg_processed:
             if self.board.send_RAW_msg(code_value, data=[]):
@@ -162,7 +164,7 @@ class UAVControl:
         
         channels = [[]] * 18
         for i in mranges:
-            modename = self.board.R_modesID_INAV[i[0]]
+            modename = self.inav.modesID.get(i[0])
             auxn = i[1]
             ch = auxn+5
             valmin = 900+(i[2]*25)
@@ -172,7 +174,7 @@ class UAVControl:
             else:
                 or_flag = ""
             print("ID: {}\t{:<16s}:\t{} (channel {})\t= {} to {}\t{}".format(i[0], modename, auxn, ch, valmin, valmax, or_flag))
-            self.modes[modename] = [ch,[valmin, valmax]]
+            self.modes[i[0]] = [ch,[valmin, valmax]]
 
     def load_modes_config_file(self, mode_config_file): 
         with open(mode_config_file,"r") as file:
@@ -182,7 +184,7 @@ class UAVControl:
 
     def arm_enable_check(self):
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
-        if len(arm_d_flags)>0 and arm_d_flags!=['SIMULATOR_MODE']:
+        if len(arm_d_flags)>0 and arm_d_flags!=[self.inav.armingDisableFlagNames_INAV.SIMULATOR_MODE]:
             print(f'Cannot Arm, disable flags: {arm_d_flags}')
             return False
         else:
@@ -190,7 +192,7 @@ class UAVControl:
 
     def arm(self): # wonky
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
-        if arm_d_flags!=['SIMULATOR_MODE']:
+        if arm_d_flags!=[self.inav.armingDisableFlagNames_INAV.SIMULATOR_MODE]:
             check = len(arm_d_flags) == 0
         else:
             check = True
@@ -198,7 +200,6 @@ class UAVControl:
         if check and not armed:
             self.set_mode('ARM', True)
             armed = self.board.bit_check(self.board.CONFIG['mode'],0)
-            print(armed)
 
             if armed: 
                 print('### VEHICLE ARMED ###')
@@ -223,22 +224,22 @@ class UAVControl:
 
     def get_active_modes(self):
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
-        if "MSP RC OVERRIDE" not in boardmodes and "MSP RC OVERRIDE" in self.active_modes:
-            boardmodes.append("MSP RC OVERRIDE")
-        #excluded = ["MSP RC OVERRIDE", "ARMED", "ARM"]
+        if self.inav.modesID.MSP_RC_OVERRIDE not in boardmodes and self.inav.modesID.MSP_RC_OVERRIDE in self.active_modes:
+            boardmodes.append(self.inav.modesID.MSP_RC_OVERRIDE)
+        #excluded = [self.inav.modesID.MSP_RC_OVERRIDE, "ARMED", "ARM"]
         #for i in self.active_modes:
         #    if i not in excluded and i not in boardmodes:
         #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
         return  boardmodes#self.active_modes
 
     def is_override_active(self):
-        if "MSP RC OVERRIDE" in self.active_modes:
+        if self.inav.modesID.MSP_RC_OVERRIDE in self.active_modes:
             return True
         else:
-            modemean = mean(self.modes["MSP RC OVERRIDE"][1])
-            ch = self.modes["MSP RC OVERRIDE"][0]-1
+            modemean = mean(self.modes[self.inav.modesID.MSP_RC_OVERRIDE][1])
+            ch = self.modes[self.inav.modesID.MSP_RC_OVERRIDE][0]-1
             chval = self.board.RC['channels'][ch]
-            chrange = self.modes["MSP RC OVERRIDE"][1]
+            chrange = self.modes[self.inav.modesID.MSP_RC_OVERRIDE][1]
             if chval >= chrange[0] and chval <= chrange[1]:
                 return True
             else:
@@ -275,15 +276,15 @@ class UAVControl:
             return None
 
     def get_sensor_config(self):
-        ret = self.std_send('MSP_SENSOR_CONFIG')
+        ret = self.std_send(self.msp.MSP_SENSOR_CONFIG)
         if ret:
             self.sensors = {
-                'acc_hardware': self.board.R_accelerationSensor[self.board.SENSOR_CONFIG['acc_hardware']], 
-                'baro_hardware': self.board.R_baroSensor[self.board.SENSOR_CONFIG['baro_hardware']], 
-                'mag_hardware': self.board.R_magSensor[self.board.SENSOR_CONFIG['mag_hardware']],
-                'pitot': self.board.R_pitotSensor[self.board.SENSOR_CONFIG['pitot']],
-                'rangefinder': self.board.R_rangefinderType[self.board.SENSOR_CONFIG['rangefinder']], 
-                'opflow': self.board.R_opticalFlowSensor[self.board.SENSOR_CONFIG['opflow']]
+                'acc_hardware': self.inav.accelerationSensor.get(self.board.SENSOR_CONFIG['acc_hardware']), 
+                'baro_hardware': self.inav.baroSensor.get(self.board.SENSOR_CONFIG['baro_hardware']), 
+                'mag_hardware': self.inav.magSensor.get(self.board.SENSOR_CONFIG['mag_hardware']),
+                'pitot': self.inav.pitotSensor.get(self.board.SENSOR_CONFIG['pitot']),
+                'rangefinder': self.inav.rangefinderType.get(self.board.SENSOR_CONFIG['rangefinder']), 
+                'opflow': self.inav.opticalFlowSensor.get(self.board.SENSOR_CONFIG['opflow'])
                 }
             return self.sensors
         else:
@@ -291,7 +292,7 @@ class UAVControl:
 
     def get_attitude(self):
         # Request, read and process the ATTITUDE (Roll, Pitch and Yaw in degrees)
-        ret = self.std_send('MSP_ATTITUDE')
+        ret = self.std_send(self.msp.MSP_ATTITUDE)
         if ret:
             self.attitude = {"pitch": self.board.SENSOR_DATA['kinematics'][1],
                         "yaw": self.board.SENSOR_DATA['kinematics'][2],
@@ -299,13 +300,13 @@ class UAVControl:
             return self.attitude
     
     def get_altitude(self):
-        ret = self.std_send("MSP_ALTITUDE")
+        ret = self.std_send(self.msp.MSP_ALTITUDE)
         if ret:
             self.alt = self.board.SENSOR_DATA['altitude']
             return self.alt
 
     def get_imu(self):
-        ret = self.stf_send('MSP_RAW_IMU')
+        ret = self.stf_send(self.msp.MSP_RAW_IMU)
         if ret:
             self.imu = {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
                     "gyroscope": self.board.SENSOR_DATA['gyroscope'],
@@ -313,22 +314,22 @@ class UAVControl:
             return self.imu
 
     def get_nav_status(self):
-        ret = self.std_send('MSP_NAV_STATUS')
+        ret = self.std_send(self.msp.MSP_NAV_STATUS)
         if ret:
             self.nav_status = {
-                "mode": self.board.R_navSystemStatus_Mode[self.board.NAV_STATUS['mode']],
-                "state": self.board.R_navSystemStatus_State[self.board.NAV_STATUS['state']],
+                "mode": self.board.NAV_STATUS['mode'],
+                "state": self.board.NAV_STATUS['state'],
                 "wp_action": self.board.NAV_STATUS['active_wp_action'],
                 "wp_number": self.board.NAV_STATUS['active_wp_number'],
-                "error": self.board.R_navSystemStatus_Error[self.board.NAV_STATUS['error']],
+                "error": self.board.NAV_STATUS['error'],
                 "heading_hold_tgt": self.board.NAV_STATUS['heading_hold_target']
             }
             return self.nav_status
 
     def get_gps_data(self):
-        a = self.std_send('MSP_RAW_GPS')
-        b = self.std_send('MSP_COMP_GPS')
-        c = self.std_send('MSP_GPSSTATISTICS')
+        a = self.std_send(self.msp.MSP_RAW_GPS)
+        b = self.std_send(self.msp.MSP_COMP_GPS)
+        c = self.std_send(self.msp.MSP_GPSSTATISTICS)
         if not a or not b or not c:
             return None
         else:
@@ -366,7 +367,7 @@ class UAVControl:
                                 p2, 
                                 p3, 
                                 flag)
-        ret = self.std_send('MSP_SET_WP', data=msp_wp)
+        ret = self.std_send(self.msp.MSP_SET_WP, data=msp_wp)
         if len(ret['dataView'])>0:
             b = self.unpack_msp_wp(ret['dataView'])
             wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
@@ -384,7 +385,7 @@ class UAVControl:
                                 wp.p2, 
                                 wp.p3, 
                                 wp.flag)
-        ret = self.std_send('MSP_SET_WP', data=msp_wp)
+        ret = self.std_send(self.msp.MSP_SET_WP, data=msp_wp)
         if len(ret['dataView'])>0:
             b = self.unpack_msp_wp(ret['dataView'])
             wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
@@ -394,7 +395,7 @@ class UAVControl:
 
     def get_wp(self,wp_no):
         # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
-        ret = self.std_send('MSP_WP', data=struct.pack('B', wp_no))
+        ret = self.std_send(self.msp.MSP_WP, data=struct.pack('B', wp_no))
         if ret:
             wp = geospatial.Waypoint(
                 self.board.WP['wp_no'],
@@ -412,7 +413,7 @@ class UAVControl:
             return None
 
     def get_wp_info(self):
-        ret = self.std_send('MSP_WP_GETINFO', data=[])
+        ret = self.std_send(self.msp.MSP_WP_GETINFO, data=[])
         if ret:
             return {
                 "reserved": self.board.WP_INFO["reserved"],
@@ -430,7 +431,7 @@ class UAVControl:
             # load modes here
             #self.load_modes_config_file('modes.json')
             self.load_modes_config()
-            self.msp_override = "MSP RC OVERRIDE" in self.modes
+            self.msp_override = self.inav.modesID.MSP_RC_OVERRIDE in self.modes
             
             # default simpleUI values, to be set in another way
             CTRL_LOOP_TIME = 1/100 
@@ -440,23 +441,23 @@ class UAVControl:
 
             # It's necessary to send some messages or the RX failsafe will be activated
             # and it will not be possible to arm.
-            command_list = ['MSP_API_VERSION', 
-                            'MSP_FC_VARIANT', 
-                            'MSP_FC_VERSION', 
-                            'MSP_BUILD_INFO', 
-                            'MSP_BOARD_INFO', 
-                            'MSP_UID', 
-                            'MSP_ACC_TRIM', 
-                            'MSP_NAME', 
-                            'MSP_STATUS', 
-                            'MSP_STATUS_EX',
-                            'MSP_BATTERY_CONFIG', 
-                            'MSP_BATTERY_STATE', 
-                            'MSP_BOXIDS',  #instead of MSP_BOXNAMES
-                            'MSP2_INAV_STATUS', 
-                            'MSP2_INAV_ANALOG',
-                            'MSP_VOLTAGE_METER_CONFIG',
-                            'MSP_RC']
+            command_list = [self.msp.MSP_API_VERSION, 
+                            self.msp.MSP_FC_VARIANT, 
+                            self.msp.MSP_FC_VERSION, 
+                            self.msp.MSP_BUILD_INFO, 
+                            self.msp.MSP_BOARD_INFO, 
+                            self.msp.MSP_UID, 
+                            self.msp.MSP_ACC_TRIM, 
+                            self.msp.MSP_NAME, 
+                            self.msp.MSP_STATUS, 
+                            self.msp.MSP_STATUS_EX,
+                            self.msp.MSP_BATTERY_CONFIG, 
+                            self.msp.MSP_BATTERY_STATE, 
+                            self.msp.MSP_BOXIDS,  #instead of MSP_BOXNAMES
+                            self.msp.MSP2_INAV_STATUS, 
+                            self.msp.MSP2_INAV_ANALOG,
+                            self.msp.MSP_VOLTAGE_METER_CONFIG,
+                            self.msp.MSP_RC]
 
             for msg in command_list: 
                 self.std_send(msg)
@@ -478,7 +479,12 @@ class UAVControl:
             if self.debugprint: print("boardName: {}".format(self.board.CONFIG['boardName']))
             if self.debugprint: print("name: {}".format(self.board.CONFIG['name']))
 
-            slow_msgs = cycle(['MSP_ANALOG', 'MSP_STATUS_EX', 'MSP_MOTOR', 'MSP_RC'])
+            slow_msgs = cycle([
+                self.msp.MSP_BATTERY_STATE,
+                self.msp.MSP2_INAV_ANALOG, 
+                self.msp.MSP_STATUS_EX, 
+                self.msp.MSP_MOTOR, 
+                self.msp.MSP_RC])
 
             ncycle = 0
             last_loop_time = last_slow_msg_time = last_cycleTime = time.time()
@@ -509,10 +515,10 @@ class UAVControl:
                     next_msg = next(slow_msgs) # circular list
                     self.std_send(next_msg)
                     
-                    if next_msg == 'MSP_ANALOG':
+                    if next_msg == self.msp.MSP_ANALOG: ######## not done
                         self.voltage = self.board.ANALOG['voltage']
 
-                    elif next_msg == 'MSP_STATUS_EX':
+                    elif next_msg == self.msp.MSP_STATUS_EX:
                         ARMED = self.board.bit_check(self.board.CONFIG['mode'],0)
                         if self.debugprint: print("ARMED: {}".format(ARMED))
                         if self.debugprint: print("armingDisableFlags: {}".format(self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])))
@@ -520,12 +526,12 @@ class UAVControl:
                         if self.debugprint: print("cycleTime: {}".format(self.board.CONFIG['cycleTime']))
                         if self.debugprint: print("Flight Mode: {}".format(self.board.process_mode(self.board.CONFIG['mode'])))
 
-                    elif next_msg == 'MSP_MOTOR':
+                    elif next_msg == self.msp.MSP_MOTOR:
                         if self.debugprint: print("Motor Values: {}".format(self.board.MOTOR_DATA))
 
-                    elif next_msg == 'MSP_RC':
-                        if self.debugprint: print("RC Channels: ", self.board.RC['channels'])
-                        if self.debugprint: print(self.channels)
+                    elif next_msg == self.msp.MSP_RC:
+                        if self.debugprint: print("Receiver RC Channels: ", self.board.RC['channels'])
+                        if self.debugprint: print("Auto RC Channels:", self.channels)
                         
 
                 end_time = time.time()

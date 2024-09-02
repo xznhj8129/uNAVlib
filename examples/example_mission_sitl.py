@@ -23,10 +23,10 @@ async def my_plan(uav):
     uav.debugprint = False
     #uav.modes.keys() # show all currently programmed modes
     # create new supermode (combination of multiple modes)
-    uav.new_supermode('GOTO', ["GCS NAV", "NAV POSHOLD"])
+    uav.new_supermode('GOTO', [uav.inav.modesID.GCS_NAV, uav.inav.modesID.NAV_POSHOLD])
     # assuming proper compile flag and bitmask config
-    uav.set_mode("MSP RC OVERRIDE", on=True)
-    uav.set_mode("ANGLE", on=True)
+    uav.set_mode(uav.inav.modesID.MSP_RC_OVERRIDE, on=True)
+    uav.set_mode(uav.inav.modesID.ANGLE, on=True)
     #await asyncio.sleep(3)
     
     uav.arm_enable_check() #fails in SITL 
@@ -35,7 +35,7 @@ async def my_plan(uav):
     #KeyError: 5
 
     await asyncio.sleep(1)
-    uav.set_mode("ARM", on=True)
+    uav.set_mode(uav.inav.modesID.ARM, on=True)
     await asyncio.sleep(1)
 
     #takeoff
@@ -94,7 +94,7 @@ async def my_plan(uav):
 
     # bring it back
     uav.set_supermode("GOTO", on=False)
-    uav.set_mode("NAV RTH", on=True)
+    uav.set_mode(uav.inav.modesID.NAV_RTH, on=True)
 
     # rth and land
     while alt > 1:

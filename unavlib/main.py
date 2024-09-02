@@ -18,12 +18,34 @@ from .modules.boardconn import connMSP
 from .modules.process import processMSP
 from .modules.fast_functions import fastMSP
 
+def dict_2_class_add_to_class(classdest, enum_name, enum_dict):
+    reverse_dict = {v: k for k, v in enum_dict.items()}
+
+    class EnumClass:
+        pass
+
+    for var_name, data in enum_dict.items():
+        vn = var_name.replace(' ','_')
+        try:
+            dat = int(data)
+        except:
+            dat = data
+        setattr(EnumClass, vn, dat)
+
+    def get(cls, value):
+        return reverse_dict.get(value)
+    
+    setattr(EnumClass, 'get', classmethod(get))
+    EnumClass.__name__ = enum_name
+    enum_class = EnumClass
+    setattr(classdest, enum_name, enum_class)
+
+class EmptyClass():
+    pass
 
 class MSPy:
 
     SIGNATURE_LENGTH = 32
-    MSPCodes = msp_codes.MSPCodes
-    R_MSPCodes = dict_reverse(MSPCodes)
 
     def __init__(self, device, baudrate=115200, trials=1, 
                  logfilename='MSPy.log', logfilemode='a', loglevel='INFO', timeout=1/100,
@@ -59,6 +81,17 @@ class MSPy:
         for key, value in vars(msp_vars).items():
             if not key.startswith('_'):
                 setattr(self, key, value)
+
+        # enums classes to replace the CANCEROUS dict-based enums of before
+        inav_class = EmptyClass()
+        for attr_name in dir(inav_enums):
+            if not attr_name.startswith("__"):
+                attr = getattr(inav_enums, attr_name)
+                if isinstance(attr, dict): 
+                    dict_2_class_add_to_class(inav_class, attr_name, attr)
+                    
+        setattr(self, "inav", inav_class)
+        dict_2_class_add_to_class(self, "msp", msp_codes.MSPCodes)
 
         if logfilename:
             logging.basicConfig(format="[%(levelname)s] [%(asctime)s]: %(message)s",
@@ -148,11 +181,3 @@ class MSPy:
     def __exit__(self, exc_type, exc_value, traceback):
         if not self.conn.closed:
             self.conn.close()
-
-for attr_name in dir(inav_enums):
-    if not attr_name.startswith("__"):
-        attr = getattr(inav_enums, attr_name)
-        if isinstance(attr, dict): 
-            reversed_dict = dict_reverse(attr)
-            setattr(MSPy, f"R_{attr_name}", reversed_dict)
-            setattr(MSPy, attr_name, attr)

@@ -15,10 +15,10 @@ This library is in active development and may change quickly, with no guarantees
 * YAMSPy monster \__init__ class refactored and split into modules
 * enums extracted from INAV source into dictionary imports for mapping and simpler programming
 * geographic functions for navigation
+* Mission Control object using asyncio
 
 ## Planned features:
-* Mission Control object using asyncio
-* PID-based flight control
+* PID-based high-level flight control
 * Automated tests
 * Implement/reproduce [MWPtools](https://github.com/stronnag/mwptools) functionality and tools
 * Mavlink compatibility if possible (direct INAV source contribution might be much better)
@@ -111,7 +111,7 @@ $ python -m unavlib.msp_proxy --serial /dev/ttyACM0 --ports 54310 54320 54330
 In your script using unavlib you need to set `use_tcp=True` and pass the port number as the device. Check the script [`simpleUI_tcp.py`](/examples/simpleUI_tcp.py) in the `examples` folder.
 
 ## Contributions:
-All are welcome and encouraged to contribute!
+All are welcome and encouraged to contribute! Seriously, please help!
 
 ## Acknowledgments:
 [Ricardo de Azambuja](https://github.com/ricardodeazambuja), [Tom](https://github.com/cmftom), [Yann](https://github.com/yannbouteiller), the [Cognifly Project](https://github.com/thecognifly/) and all other contributors for developing the original YAMSPy library.\

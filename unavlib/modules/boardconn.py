@@ -64,38 +64,47 @@ class connMSP():
     def basic_info(self):
         """Basic info about the flight controller to distinguish between the many flavours.
         """
-        msg = 'MSP_API_VERSION'
+        msg = self.board.msp.MSP_API_VERSION
         while self.board.CONFIG['apiVersion'] == '0.0.0':
             print(f"Waiting for {msg} reply...")
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(msg, data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
 
-        msg = 'MSP_FC_VARIANT'
+        msg = self.board.msp.MSP_FC_VARIANT
         while self.board.CONFIG['flightControllerIdentifier'] == '':
             print(f"Waiting for {msg} reply...")
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(msg, data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
 
         if 'INAV' in self.board.CONFIG['flightControllerIdentifier']:
             self.board.INAV = True
 
-        basic_info_cmd_list = ['MSP_FC_VERSION', 'MSP_BUILD_INFO', 'MSP_BOARD_INFO', 'MSP_UID', 
-                               'MSP_ACC_TRIM', 'MSP_NAME', 'MSP_STATUS', 'MSP_STATUS_EX', 'MSP_ANALOG']
+        basic_info_cmd_list = [
+            self.board.msp.MSP_FC_VERSION, 
+            self.board.msp.MSP_BUILD_INFO, 
+            self.board.msp.MSP_BOARD_INFO, 
+            self.board.msp.MSP_UID, 
+            self.board.msp.MSP_ACC_TRIM, 
+            self.board.msp.MSP_NAME, 
+            self.board.msp.MSP_STATUS, 
+            self.board.msp.MSP_STATUS_EX, 
+            self.board.msp.MSP_ANALOG
+        ]
         if self.board.INAV:
-            basic_info_cmd_list.append('MSP2_INAV_ANALOG')
-            basic_info_cmd_list.append('MSP_VOLTAGE_METER_CONFIG')
-            basic_info_cmd_list.append('MSP2_INAV_STATUS')
+            basic_info_cmd_list.append(self.board.msp.MSP2_INAV_ANALOG)
+            basic_info_cmd_list.append(self.board.msp.MSP_VOLTAGE_METER_CONFIG)
+            basic_info_cmd_list.append(self.board.msp.MSP2_INAV_STATUS)
 
         for msg in basic_info_cmd_list:
             sent = 0
             while sent<=0:
-                sent = self.send_RAW_msg(self.board.MSPCodes[msg], data=[])
+                sent = self.send_RAW_msg(msg, data=[])
             dataHandler = self.receive_msg()
             self.process_recv_data(dataHandler)
     
@@ -169,7 +178,7 @@ class connMSP():
         while (flags):
             bitpos = ffs(flags) - 1
             flags &= ~(1 << bitpos)
-            result.append(self.board.R_armingDisableFlagNames_INAV[bitpos])
+            result.append(bitpos)
         return result
 
     # why does this not show active modes?
@@ -179,8 +188,7 @@ class connMSP():
         result = []
         for i in range(len(self.board.AUX_CONFIG_IDS)):
             if (self.bit_check(flag, i)):
-                #print(i, True)
-                result.append(self.board.R_modesID_INAV[self.board.AUX_CONFIG_IDS[i]])
+                result.append(self.board.AUX_CONFIG_IDS[i])
         return result
 
 
@@ -225,16 +233,16 @@ class connMSP():
 
     def save2eprom(self):
         logging.info("Save to EPROM requested") # some configs also need reboot to be applied (not online).
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_EEPROM_WRITE'], data=[])
+        return self.send_RAW_msg(self.board.msp.MSP_EEPROM_WRITE, data=[])
 
 
     def reboot(self):
         logging.info("Reboot requested")
         rebooting = True
         while rebooting:
-            if self.send_RAW_msg(self.board.MSPCodes['MSP_REBOOT'], data=[]):
+            if self.send_RAW_msg(self.board.msp.MSP_REBOOT, data=[]):
                 dataHandler = self.receive_msg()
-                if dataHandler['code'] == self.board.MSPCodes['MSP_REBOOT'] and dataHandler['packet_error'] == 0:
+                if dataHandler['code'] == self.board.msp.MSP_REBOOT and dataHandler['packet_error'] == 0:
                     rebooting = False
 
 
@@ -245,21 +253,21 @@ class connMSP():
         https://github.com/betaflight/betaflight/wiki/Runaway-Takeoff-Prevention
         """
         data = bytearray([armingDisabled, runawayTakeoffPreventionDisabled])
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_ARMING_DISABLE'], data)
+        return self.send_RAW_msg(self.board.msp.MSP_ARMING_DISABLE, data)
 
 
     def set_RX_MAP(self, new_rc_map):
         assert(type(new_rc_map)==list)
         assert(len(new_rc_map)==8)
 
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_RX_MAP'], new_rc_map)
+        return self.send_RAW_msg(self.board.msp.MSP_SET_RX_MAP, new_rc_map)
 
 
     def set_FEATURE_CONFIG(self, mask):
         assert(type(mask)==int)
 
         data = self.convert([mask], 32)
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_FEATURE_CONFIG'], data)
+        return self.send_RAW_msg(self.board.msp.MSP_SET_FEATURE_CONFIG, data)
 
 
     def send_RAW_MOTORS(self, data=[]):
@@ -269,7 +277,7 @@ class connMSP():
         data = self.convert(data, 16) # any values bigger than 255 need to be converted.
                                       # RC and Motor commands go from 0 to 2000.
 
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_MOTOR'], data)
+        return self.send_RAW_msg(self.board.msp.MSP_SET_MOTOR, data)
 
 
     def send_RAW_RC(self, data=[]):
@@ -285,7 +293,7 @@ class connMSP():
         data = self.convert(data, 16) # any values bigger than 255 need to be converted.
                                       # RC and Motor commands go from 0 to 2000.
 
-        return self.send_RAW_msg(self.board.MSPCodes['MSP_SET_RAW_RC'], data)
+        return self.send_RAW_msg(self.board.msp.MSP_SET_RAW_RC, data)
 
 
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
@@ -331,7 +339,7 @@ class connMSP():
             return -3
         else:
             if (not dataHandler['unsupported']):
-                processor = getattr(self.board, "process_" + self.board.R_MSPCodes[code], None)
+                processor = getattr(self.board, "process_" + self.board.msp.get(code), None)
                 if processor: # if nothing is found, should be None
                     try:
                         if data:

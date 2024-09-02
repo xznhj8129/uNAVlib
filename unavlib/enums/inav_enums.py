@@ -1,5 +1,3 @@
-# all enums available with reverse-lookup by integer by referencing R_enumName dict
-
 # imported from enums/base_enums.py
 armingDisableFlagNames_BF = {
     "NOGYRO": 0,
@@ -65,7 +63,7 @@ flyingPlatformType = {
     "PLATFORM_BOAT": 5,
     "PLATFORM_OTHER": 6
 }
-modesID_INAV = {
+modesID = {
     "ARM": 0,
     "ANGLE": 1,
     "HORIZON": 2,

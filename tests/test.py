@@ -2,7 +2,7 @@ import asyncio
 import socket
 import time
 from unavlib.control import UAVControl
-from unavlib.control import geospatial
+from unavlib.modules import geospatial
 
 import struct
 from unavlib import MSPy
