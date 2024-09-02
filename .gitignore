@@ -116,6 +116,8 @@ diagram.drawio
 .$diagram.drawio.bkp
 /docs
 Doxyfile
+functions.csv
+.~lock.functions.csv#
 
 # user-specific stuff
 modes.json

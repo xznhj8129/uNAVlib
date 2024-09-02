@@ -13,7 +13,7 @@ This library is in active development and may change quickly, with no guarantees
 ## New Features ##
 * Asyncio-based flight controller class object with simplified functions for easy mission scripting
 * YAMSPy monster \__init__ class refactored and split into modules
-* enums extracted from INAV source into dictionary imports for mapping and simpler programming
+* enums extracted from INAV source into class for simpler programming akin to pymavlink's mavutil
 * geographic functions for navigation
 * Mission Control object using asyncio
 
