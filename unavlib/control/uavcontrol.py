@@ -42,7 +42,7 @@ class UAVControl:
         self.executor = ThreadPoolExecutor()
         self.chorder = ['roll', 'pitch', 'throttle', 'yaw', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9', 'ch10', 'ch11', 'ch12', 'ch13', 'ch14', 'ch15', 'ch16', 'ch17', 'ch18']
         self.channels = [900] * 16
-        self.pwm_range = [1000,2000]
+        self.pwm_range = [900,2100]
         self.pwm_midpoint = mean(self.pwm_range)
         self.channels[0] = 1500 # bad things happens if sticks not centered
         self.channels[1] = 1500
@@ -72,6 +72,7 @@ class UAVControl:
         self.alt = {}
         self.nav_status = {}
         self.mission = [None]*255
+        self.armed = False
 
     def stop(self):
         self.run = False
@@ -184,13 +185,20 @@ class UAVControl:
 
     def arm_enable_check(self):
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
-        if len(arm_d_flags)>0 and arm_d_flags!=[self.inav.armingDisableFlagNames_INAV.SIMULATOR_MODE]:
-            print(f'Cannot Arm, disable flags: {arm_d_flags}')
+        valid_flags = []
+        for i in arm_d_flags:
+            if i!= self.inav.armingDisableFlagNames_INAV.SIMULATOR_MODE and \
+                i!= self.inav.armingDisableFlagNames_INAV.WAS_EVER_ARMED:
+                valid_flags.append(i)
+        if len(valid_flags)>0:
+            print(f'Cannot Arm, disable flags:')
+            for i in valid_flags:
+                print(f"\t{self.inav.armingDisableFlagNames_INAV.get(i)}")
             return False
         else:
             return True
 
-    def arm(self): # wonky
+    def arm(self): # wonky, even need to use?
         arm_d_flags = self.board.process_armingDisableFlags(self.board.CONFIG['armingDisableFlags'])
         if arm_d_flags!=[self.inav.armingDisableFlagNames_INAV.SIMULATOR_MODE]:
             check = len(arm_d_flags) == 0
@@ -209,28 +217,31 @@ class UAVControl:
             print(f'Could not arm, active disable flags: {arm_d_flags}')
         return armed
 
-    def set_mode(self, mode:str, on:bool): # this needs to be more robust to handle when a mode is switched off
-        if on and mode not in self.get_active_modes() :
-            print(mode,'on')
-            modemean = mean(self.modes[mode][1])
-            modech = self.modes[mode][0]-1
-            self.channels[ modech ] = modemean
-            self.active_modes.append(mode)
+    def set_mode(self, mode: int, on: bool) -> None:
+        if mode not in self.modes:
+            return  # Mode doesn't exist
+        
+        channel, pwm_range = self.modes[mode]
+        print(f'mode switch {self.inav.modesID.get(mode)} to {on}')
+        if on:
+            middle_value = (pwm_range[0] + pwm_range[1]) // 2
+            self.channels[channel-1] = middle_value
+            #print(f'set ch {channel} to {middle_value}')
+        else:
+            self.channels[channel-1] = 900
+            #print(f'set ch {channel} to 900')
+    
+    def get_active_modes(self) -> list:
+        active_modes = []
+        for mode, (channel, pwm_range) in self.modes.items():
+            middle_value = (pwm_range[0] + pwm_range[1]) // 2
+            if self.channels[channel] == middle_value:
+                active_modes.append(mode)
+        return active_modes
 
-        elif not on and mode in self.get_active_modes():
-            print(mode,'off')
-            self.channels[ self.modes[mode][0]-1 ] = self.mode_range[0]
-            del self.active_modes[self.active_modes.index(mode)]
-
-    def get_active_modes(self):
+    def get_active_modes2(self):
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
-        if self.inav.modesID.MSP_RC_OVERRIDE not in boardmodes and self.inav.modesID.MSP_RC_OVERRIDE in self.active_modes:
-            boardmodes.append(self.inav.modesID.MSP_RC_OVERRIDE)
-        #excluded = [self.inav.modesID.MSP_RC_OVERRIDE, "ARMED", "ARM"]
-        #for i in self.active_modes:
-        #    if i not in excluded and i not in boardmodes:
-        #        raise Exception(f"Mode mismatch detected, UAControl mode {i} not in Flight Controller mode flags")
-        return  boardmodes#self.active_modes
+        return  boardmodes
 
     def is_override_active(self):
         if self.inav.modesID.MSP_RC_OVERRIDE in self.active_modes:
@@ -270,7 +281,7 @@ class UAVControl:
         return max(min(self.pwm_range[0], n), self.pwm_range[1])
 
     def set_rc_channel(self, ch:str, value:int): # uses string indexes
-        if self.msp_override and self.chorder.index(ch)+1 in self.msp_override_channels:
+        if (self.msp_receiver) or (self.msp_override and self.chorder.index(ch)+1 in self.msp_override_channels):
             self.channels[self.chorder.index(ch)] = value
         else:
             return None
@@ -480,6 +491,7 @@ class UAVControl:
             if self.debugprint: print("name: {}".format(self.board.CONFIG['name']))
 
             slow_msgs = cycle([
+                self.msp.MSP_ANALOG,
                 self.msp.MSP_BATTERY_STATE,
                 self.msp.MSP2_INAV_ANALOG, 
                 self.msp.MSP_STATUS_EX, 
@@ -493,11 +505,13 @@ class UAVControl:
                 if self.debugprint: print(f'\n################## CYCLE {ncycle} ######################')
                 ncycle+=1
                 start_time = time.time()
+
+                self.armed = self.board.bit_check(self.board.CONFIG['mode'],0)
+                self.msp_override_active = self.is_override_active()
                 #
                 # IMPORTANT MESSAGES (CTRL_LOOP_TIME based)
                 #
-                self.msp_override_active = self.is_override_active()
-                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME and self.msp_override_active:
+                if (time.time()-last_loop_time) >= CTRL_LOOP_TIME and (self.msp_receiver or self.msp_override_active):
                     last_loop_time = time.time()
                     # Send the RC channel values to the FC
                     if self.board.send_RAW_RC(self.channels):
@@ -552,6 +566,7 @@ class UAVControl:
             print('!!! Error in Flight Control loop !!!')
             print(traceback.format_exc())
             await self.disconnect()
+            self.run = False
             return 1
 
 
