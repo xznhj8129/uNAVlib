@@ -3,6 +3,7 @@ import socket
 import time
 from unavlib.control import UAVControl
 from unavlib.modules import geospatial
+from unavlib import inavutil
 
 async def telemetry_display(uav):
     #uav.debugprint = True

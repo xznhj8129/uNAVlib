@@ -14,7 +14,7 @@ class fastMSP():
 
     def fast_read_altitude(self):
         # Request altitude
-        if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_ALTITUDE']):
+        if self.mspy.send_RAW_msg(inavutil.msp.MSP_ALTITUDE):
             # dataHandler = self.mspy.receive_msg()
             # self.mspy.process_recv_data(dataHandler)
             # $ + M + < + data_length + msg_code + data + msg_crc
@@ -27,7 +27,7 @@ class fastMSP():
 
     def fast_read_imu(self):
         # Request IMU values
-        if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_RAW_IMU']):
+        if self.mspy.send_RAW_msg(inavutil.msp.MSP_RAW_IMU):
             # WHY NOT THIS???!!! HOW SLOW IS IT?!
             #dataHandler = self.mspy.receive_msg()
             #self.mspy.process_recv_data(dataHandler)
@@ -78,7 +78,7 @@ class fastMSP():
         """
 
         # Request ATTITUDE values
-        if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_ATTITUDE']):
+        if self.mspy.send_RAW_msg(inavutil.msp.MSP_ATTITUDE):
             # dataHandler = self.mspy.receive_msg()
             # self.mspy.process_recv_data(dataHandler)
             # $ + M + < + data_length + msg_code + data + msg_crc
@@ -100,7 +100,7 @@ class fastMSP():
         """
 
         # Request ANALOG values
-        if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_ANALOG']):
+        if self.mspy.send_RAW_msg(inavutil.msp.MSP_ANALOG):
             # dataHandler = self.mspy.receive_msg()
             # self.mspy.process_recv_data(dataHandler)
             # $ + M + < + data_length + msg_code + data + msg_crc
@@ -138,7 +138,7 @@ class fastMSP():
         """
         cmds = [int(cmd) for cmd in cmds]
         data = struct.pack('<%dH' % len(cmds), *cmds)
-        if self.mspy.send_RAW_msg(self.mspy.MSPCodes['MSP_SET_RAW_RC'], data):
+        if self.mspy.send_RAW_msg(inavutil.msp.MSP_SET_RAW_RC, data):
             # $ + M + < + data_length + msg_code + data + msg_crc
             # 6 bytes + data_length
 

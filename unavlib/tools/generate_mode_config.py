@@ -2,6 +2,7 @@ import time
 from .. import MSPy
 from ..enums import inav_enums
 from ..modules.utils import dict_reverse
+from ..modules.utils import inavutil
 from argparse import ArgumentParser
 import json
 
@@ -28,7 +29,7 @@ def get_modes(serial_port):
             print('Could not connect to board, check connection or device')
             exit(1)
         prev = time.monotonic()
-        code_value = MSPy.MSPCodes['MSP_MODE_RANGES']
+        code_value = inavutil.msp.MSP_MODE_RANGES
         msg_processed = False
 
         while not msg_processed:
@@ -64,9 +65,8 @@ if __name__ == '__main__':
         exit(1)
     channels = [[]] * 18
     jsonmodes = {"board_info": boardinfo}
-    modenames = dict_reverse(inav_enums.modesID_INAV)
     for i in moderanges:
-        modename = modenames[i[0]]
+        modename = inavutil.modesID.get(i[0])
         ch = i[1]
         valmin = 900+(i[2]*25)
         valmax = 900+(i[3]*25)

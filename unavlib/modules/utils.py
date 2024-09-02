@@ -1,4 +1,5 @@
 import socket
+from ..enums import inav_enums, msp_codes
 
 def dict_index(d, target_value):
     return [key for key, value in d.items() if value == target_value]
@@ -51,3 +52,44 @@ class TCPSocket:
             raise RuntimeError("socket connection broken")
 
         return recvbuffer
+class MSPContainer:
+    """Container for MSP-related enums"""
+    pass
+
+class EnumContainer:
+    """Container for other enums"""
+    pass
+
+# Function to convert a dict to a class and add it to a container class
+def dict_2_class_add_to_class(container_class, enum_name, enum_dict):
+    reverse_dict = {v: k for k, v in enum_dict.items()}
+
+    class EnumClass:
+        pass
+
+    for var_name, data in enum_dict.items():
+        vn = var_name.replace(' ', '_')
+        try:
+            dat = int(data)
+        except:
+            dat = data
+        setattr(EnumClass, vn, dat)
+
+    def get(cls, value):
+        return reverse_dict.get(value)
+    
+    setattr(EnumClass, 'get', classmethod(get))
+    EnumClass.__name__ = enum_name
+    enum_class = EnumClass
+
+    setattr(container_class, enum_name, enum_class)
+
+inavutil = EnumContainer()
+for attr_name in dir(inav_enums):
+    if not attr_name.startswith("__"):
+        attr = getattr(inav_enums, attr_name)
+        if isinstance(attr, dict): 
+            dict_2_class_add_to_class(inavutil, attr_name, attr)
+
+dict_2_class_add_to_class(inavutil, "msp", msp_codes.MSPCodes)
+#setattr(inavutil, 'msp', msp)
