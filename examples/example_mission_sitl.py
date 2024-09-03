@@ -110,6 +110,7 @@ async def my_plan(uav):
 async def main():
     mydrone = UAVControl(device='5761', baudrate=115200, use_tcp=True, platform="AIRPLANE")
     mydrone.msp_override_channels=[1, 2, 3, 4, 5, 6, 12, 13, 14]
+    uavctl.msp_receiver = True
 
     try:
         await mydrone.connect()

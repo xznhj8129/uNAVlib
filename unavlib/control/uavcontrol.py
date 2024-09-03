@@ -221,14 +221,13 @@ class UAVControl:
             return  # Mode doesn't exist
         
         channel, pwm_range = self.modes[mode]
-        print(f'mode switch {inavutil.modesID.get(mode)} to {on}')
+        
         if on:
-            middle_value = (pwm_range[0] + pwm_range[1]) // 2
-            self.channels[channel-1] = middle_value
-            #print(f'set ch {channel} to {middle_value}')
+            pwm = (pwm_range[0] + pwm_range[1]) // 2
         else:
-            self.channels[channel-1] = 900
-            #print(f'set ch {channel} to 900')
+            pwm = 900
+        self.channels[channel-1] = pwm
+        print(f'mode switch {inavutil.modesID.get(mode)} to {on} ch {channel-1} to {pwm}')
     
     def get_active_modes(self) -> list:
         active_modes = []
@@ -238,14 +237,14 @@ class UAVControl:
                 active_modes.append(mode)
         return active_modes
 
-    def get_active_modes2(self):
+    def get_board_modes(self):
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
         return  boardmodes
 
     def is_override_active(self):
-        if inavutil.modesID.MSP_RC_OVERRIDE in self.active_modes:
+        if self.msp_receiver and inavutil.modesID.MSP_RC_OVERRIDE in self.active_modes:
             return True
-        else:
+        elif not self.msp_receiver:
             modemean = mean(self.modes[inavutil.modesID.MSP_RC_OVERRIDE][1])
             ch = self.modes[inavutil.modesID.MSP_RC_OVERRIDE][0]-1
             chval = self.board.RC['channels'][ch]
@@ -352,6 +351,7 @@ class UAVControl:
 
     @staticmethod
     def pack_msp_wp(wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
+        print(f"wp_no={wp_no}, action={action}, lat={lat}, lon={lon}, altitude={altitude}, p1={p1}, p2={p2}, p3={p3}, flag={flag}")
         msp_wp = struct.pack('<BBiiihhhB', wp_no, action, lat, lon, altitude, p1, p2, p3, flag)
         return msp_wp
 
@@ -368,16 +368,19 @@ class UAVControl:
     # p1, p2, p3 = see inav/wiki/MSP-Navigation-Messages
     # flag = In general, flag is 0, unless it's the last point in a mission, in which case it is set to 0xa5 (165) (or 0x48 (72) for FBH WP)
     def set_wp(self, wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
+        print('############## JIDIDASODOAIDUIAUDIOIOASUDIO')
         msp_wp = self.pack_msp_wp(wp_no, 
                                 action, 
                                 int(lat * 1e7), 
                                 int(lon * 1e7), 
-                                altitude*100, 
+                                int(altitude*100), 
                                 p1, 
                                 p2, 
                                 p3, 
                                 flag)
+        print('###### SENDING')
         ret = self.std_send(inavutil.msp.MSP_SET_WP, data=msp_wp)
+        print('##### SENT')
         if len(ret['dataView'])>0:
             b = self.unpack_msp_wp(ret['dataView'])
             wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])

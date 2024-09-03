@@ -27,6 +27,8 @@ async def telemetry_display(uav):
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
     mydrone.msp_override_channels=[1, 2, 3, 4, 13]
+    uavctl.msp_receiver = True
+    
     try:
         await mydrone.connect()
         print("Connected to the flight controller")

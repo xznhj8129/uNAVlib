@@ -61,8 +61,8 @@ async def my_plan(uav):
     uav.set_supermode("GOTO", on=True)
     while inavutil.modesID.GCS_NAV not in uav.get_active_modes():
         await asyncio.sleep(1)
-    wp = geospatial.GPSposition(45.487363, -73.812242, 20)
-    uav.set_wp(255, 1, wp.lat, wp.lon, 100, 0, 0, 0, 0)
+    wp = geospatial.GPSposition(45.487363, -73.812242, 50)
+    uav.set_wp(255, 1, wp.lat, wp.lon, wp.alt, 0, 0, 0, 0)
     print(f"Navstatus: {uav.get_nav_status()}")
 
     gpsd = uav.get_gps_data()
@@ -109,6 +109,7 @@ async def my_plan(uav):
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
     mydrone.msp_override_channels=[1, 2, 3, 4, 5, 6, 12, 13, 14]
+    uavctl.msp_receiver = True
 
     try:
         await mydrone.connect()

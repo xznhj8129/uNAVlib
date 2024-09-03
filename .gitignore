@@ -121,3 +121,4 @@ functions.csv
 
 # user-specific stuff
 modes.json
+*.log
