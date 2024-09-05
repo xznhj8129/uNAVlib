@@ -1,8 +1,6 @@
 import struct
 from unavlib import MSPy
-from unavlib.modules.utils import dict_reverse
-
-R_MSPCodes = dict_reverse(MSPy.MSPCodes)
+from unavlib.modules.utils import inavutil
 
 # Define a function to pack data into the MSP waypoint structure
 def pack_msp_wp(wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
@@ -14,7 +12,7 @@ def unpack_msp_wp(msp_wp):
     return unpacked_data
 
 def send(board, msg_code, data=[]):
-    if board.send_RAW_msg(MSPy.MSPCodes[msg_code], data=data):
+    if board.send_RAW_msg(msg_code, data=data):
         dataHandler = board.receive_msg()
         board.process_recv_data(dataHandler)
         return dataHandler
@@ -46,7 +44,7 @@ with MSPy(device='/dev/ttyUSB0', loglevel='DEBUG', baudrate=115200) as board:
         try1 = True
         if try1:
             print('MSP_SET_WP')
-            ret = send(board, 'MSP_SET_WP', data=packed_wp)
+            ret = send(board, inavutil.msp.MSP_SET_WP, data=packed_wp)
             print(ret)
             if len(ret['dataView'])>0:
                 print(unpack_msp_wp(ret['dataView']))
@@ -56,7 +54,7 @@ with MSPy(device='/dev/ttyUSB0', loglevel='DEBUG', baudrate=115200) as board:
         print()
         print('MSP_WP_GETINFO')
         # https://github.com/iNavFlight/inav/blob/master/src/main/fc/fc_msp.c#L1423
-        board.send_RAW_msg(MSPy.MSPCodes['MSP_WP_GETINFO'], data=[])
+        board.send_RAW_msg(inavutil.msp.MSP_WP_GETINFO, data=[])
         ret = board.receive_msg()
         print(ret)
         data = struct.unpack('<BBBB', ret['dataView'])
@@ -73,7 +71,7 @@ with MSPy(device='/dev/ttyUSB0', loglevel='DEBUG', baudrate=115200) as board:
         print('MSP_WP')
         # Special waypoints are 0, 254, and 255. #0 returns the RTH (Home) position, #254 returns the current desired position (e.g. target waypoint), #255 returns the current position.
         for i in range(1,jsondat['WaypointCount']+1):
-            board.send_RAW_msg(MSPy.MSPCodes['MSP_WP'],  data=struct.pack('B', i))
+            board.send_RAW_msg(inavutil.msp.MSP_WP,  data=struct.pack('B', i))
             ret = board.receive_msg()
             print(ret)
             b = unpack_msp_wp(ret['dataView'])

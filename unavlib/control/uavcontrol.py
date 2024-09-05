@@ -288,12 +288,12 @@ class UAVControl:
         ret = self.std_send(inavutil.msp.MSP_SENSOR_CONFIG)
         if ret:
             self.sensors = {
-                'acc_hardware': inavutil.accelerationSensor.get(self.board.SENSOR_CONFIG['acc_hardware']), 
-                'baro_hardware': inavutil.baroSensor.get(self.board.SENSOR_CONFIG['baro_hardware']), 
-                'mag_hardware': inavutil.magSensor.get(self.board.SENSOR_CONFIG['mag_hardware']),
-                'pitot': inavutil.pitotSensor.get(self.board.SENSOR_CONFIG['pitot']),
-                'rangefinder': inavutil.rangefinderType.get(self.board.SENSOR_CONFIG['rangefinder']), 
-                'opflow': inavutil.opticalFlowSensor.get(self.board.SENSOR_CONFIG['opflow'])
+                'accelerationSensor': self.board.SENSOR_CONFIG['acc_hardware'], 
+                'baroSensor': self.board.SENSOR_CONFIG['baro_hardware'], 
+                'mag_hardware': self.board.SENSOR_CONFIG['mag_hardware'],
+                'pitotSensor': self.board.SENSOR_CONFIG['pitot'],
+                'rangefinderType': self.board.SENSOR_CONFIG['rangefinder'], 
+                'opticalFlowSensor': self.board.SENSOR_CONFIG['opflow']
                 }
             return self.sensors
         else:
@@ -301,30 +301,26 @@ class UAVControl:
 
     def get_attitude(self):
         # Request, read and process the ATTITUDE (Roll, Pitch and Yaw in degrees)
-        ret = self.std_send(inavutil.msp.MSP_ATTITUDE)
-        if ret:
+        if self.std_send(inavutil.msp.MSP_ATTITUDE):
             self.attitude = {"pitch": self.board.SENSOR_DATA['kinematics'][1],
                         "yaw": self.board.SENSOR_DATA['kinematics'][2],
                         "roll": self.board.SENSOR_DATA['kinematics'][0]}
             return self.attitude
     
     def get_altitude(self):
-        ret = self.std_send(inavutil.msp.MSP_ALTITUDE)
-        if ret:
+        if self.std_send(inavutil.msp.MSP_ALTITUDE):
             self.alt = self.board.SENSOR_DATA['altitude']
             return self.alt
 
     def get_imu(self):
-        ret = self.stf_send(inavutil.msp.MSP_RAW_IMU)
-        if ret:
+        if self.stf_send(inavutil.msp.MSP_RAW_IMU):
             self.imu = {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
                     "gyroscope": self.board.SENSOR_DATA['gyroscope'],
                     "magnetometer": self.board.SENSOR_DATA['magnetometer']}
             return self.imu
 
     def get_nav_status(self):
-        ret = self.std_send(inavutil.msp.MSP_NAV_STATUS)
-        if ret:
+        if self.std_send(inavutil.msp.MSP_NAV_STATUS):
             self.nav_status = {
                 "mode": self.board.NAV_STATUS['mode'],
                 "state": self.board.NAV_STATUS['state'],
@@ -348,10 +344,9 @@ class UAVControl:
             ret['speed'] = ret['speed'] / 100
             return ret
 
-
     @staticmethod
     def pack_msp_wp(wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
-        print(f"wp_no={wp_no}, action={action}, lat={lat}, lon={lon}, altitude={altitude}, p1={p1}, p2={p2}, p3={p3}, flag={flag}")
+        #print(f"packed: wp_no={wp_no}, action={action}, lat={lat}, lon={lon}, altitude={altitude}, p1={p1}, p2={p2}, p3={p3}, flag={flag}")
         msp_wp = struct.pack('<BBiiihhhB', wp_no, action, lat, lon, altitude, p1, p2, p3, flag)
         return msp_wp
 
@@ -368,20 +363,18 @@ class UAVControl:
     # p1, p2, p3 = see inav/wiki/MSP-Navigation-Messages
     # flag = In general, flag is 0, unless it's the last point in a mission, in which case it is set to 0xa5 (165) (or 0x48 (72) for FBH WP)
     def set_wp(self, wp_no, action, lat, lon, altitude, p1, p2, p3, flag):
-        print('############## JIDIDASODOAIDUIAUDIOIOASUDIO')
-        msp_wp = self.pack_msp_wp(wp_no, 
-                                action, 
+        msp_wp = self.pack_msp_wp(int(wp_no), 
+                                int(action), 
                                 int(lat * 1e7), 
                                 int(lon * 1e7), 
-                                int(altitude*100), 
-                                p1, 
-                                p2, 
-                                p3, 
-                                flag)
-        print('###### SENDING')
+                                int(altitude*100), #you little shit
+                                int(p1), 
+                                int(p2), 
+                                int(p3), 
+                                int(flag))
+
         ret = self.std_send(inavutil.msp.MSP_SET_WP, data=msp_wp)
-        print('##### SENT')
-        if len(ret['dataView'])>0:
+        if len(ret['dataView'])>0: #never returns anything?
             b = self.unpack_msp_wp(ret['dataView'])
             wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
             return wp
@@ -393,13 +386,13 @@ class UAVControl:
                                 wp.action, 
                                 int(wp.pos.lat * 1e7), 
                                 int(wp.pos.lon * 1e7), 
-                                wp.pos.alt*100, 
+                                int(wp.pos.alt*100), 
                                 wp.p1, 
                                 wp.p2, 
                                 wp.p3, 
                                 wp.flag)
         ret = self.std_send(inavutil.msp.MSP_SET_WP, data=msp_wp)
-        if len(ret['dataView'])>0:
+        if len(ret['dataView'])>0: 
             b = self.unpack_msp_wp(ret['dataView'])
             wp = geospatial.Waypoint(b[0] ,b[1], float(b[2]) / 1e7, float(b[3]) / 1e7, float(b[4]) / 100, b[5], b[6], b[7], b[8])
             return wp
@@ -447,8 +440,11 @@ class UAVControl:
             self.msp_override = inavutil.modesID.MSP_RC_OVERRIDE in self.modes
             
             # default simpleUI values, to be set in another way
-            CTRL_LOOP_TIME = 1/100 
-            SLOW_MSGS_LOOP_TIME = 1/5 # these messages take a lot of time slowing down the loop...
+            #CTRL_LOOP_TIME = 1/1000
+            #SLOW_MSGS_LOOP_TIME = 1/10 # these messages take a lot of time slowing down the loop...
+            CTRL_LOOP_TIME = 1/20
+            SLOW_MSGS_LOOP_TIME = 1/8
+
             NO_OF_CYCLES_AVERAGE_GUI_TIME = 10
             average_cycle = deque([0]*NO_OF_CYCLES_AVERAGE_GUI_TIME)
 
@@ -470,6 +466,7 @@ class UAVControl:
                             inavutil.msp.MSP2_INAV_STATUS, 
                             inavutil.msp.MSP2_INAV_ANALOG,
                             inavutil.msp.MSP_VOLTAGE_METER_CONFIG,
+                            inavutil.msp.MSP_SENSOR_CONFIG,
                             inavutil.msp.MSP_RC]
 
             for msg in command_list: 
@@ -493,12 +490,17 @@ class UAVControl:
             if self.debugprint: print("name: {}".format(self.board.CONFIG['name']))
 
             slow_msgs = cycle([
-                inavutil.msp.MSP_ANALOG,
-                inavutil.msp.MSP_BATTERY_STATE,
                 inavutil.msp.MSP2_INAV_ANALOG, 
+                inavutil.msp.MSP_BATTERY_STATE,
                 inavutil.msp.MSP_STATUS_EX, 
                 inavutil.msp.MSP_MOTOR, 
-                inavutil.msp.MSP_RC])
+                inavutil.msp.MSP_RC,
+                inavutil.msp.MSP_ATTITUDE,
+                inavutil.msp.MSP_ALTITUDE,
+                inavutil.msp.MSP_RAW_IMU,
+                inavutil.msp.MSP_RAW_GPS,
+                inavutil.msp.MSP_NAV_STATUS
+                ])
 
             ncycle = 0
             last_loop_time = last_slow_msg_time = last_cycleTime = time.time()
@@ -553,12 +555,12 @@ class UAVControl:
                 end_time = time.time()
                 last_cycleTime = end_time-start_time
                 if (end_time-start_time)<CTRL_LOOP_TIME:
-                    time.sleep(CTRL_LOOP_TIME-(end_time-start_time))
+                    await asyncio.sleep(CTRL_LOOP_TIME-(end_time-start_time))
                     
                 average_cycle.append(end_time-start_time)
                 average_cycle.popleft()
 
-                await asyncio.sleep(0.1)
+                #await asyncio.sleep(0.1)
             
             print('\n### Flight Control loop finished ###')
             await self.disconnect()
