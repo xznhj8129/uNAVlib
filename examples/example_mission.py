@@ -1,8 +1,8 @@
 import asyncio
 import time
 from unavlib.control import UAVControl
-from unavlib.modules import geospatial
-from unavlib import inavutil
+from unavlib.control import geospatial
+from unavlib.modules.utils import inavutil
 
 # Example Mission and use of UAVControl class
 # Work in progress

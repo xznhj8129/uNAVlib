@@ -5,6 +5,7 @@ import time
 import sys
 import serial
 from select import select
+from ..modules.utils import inavutil
 
 # WHY DO THESE SUCK SO MUCH
 

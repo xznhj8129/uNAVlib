@@ -24,12 +24,12 @@ class PosVector():
 class Waypoint():
     def __init__(self, wp_no, action, lat, lon, alt, p1, p2, p3, flag):
         self.pos = GPSposition(lat,lon,alt)
-        self.wp_no = wp_no
-        self.action = action
-        self.p1 = p1
-        self.p2 = p2
-        self.p3 = p3
-        self.flag = flag
+        self.wp_no = int(wp_no)
+        self.action = int(action)
+        self.p1 = int(p1)
+        self.p2 = int(p2)
+        self.p3 = int(p3)
+        self.flag = int(flag)
     def __str__(self):
         s = f"WP No.: {self.wp_no} {self.pos} Action: {self.action} P1: {self.p1} P2: {self.p2} P3: {self.p3} Flag: {self.flag}"
         return s

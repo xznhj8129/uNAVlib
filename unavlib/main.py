@@ -114,7 +114,7 @@ class MSPy:
         self.port_read_lock = RLock()
         self.port_write_lock = Lock()
 
-        self.INAV = False
+        self.INAV = True #changed from False to True!
 
         self.last_write = time.time()
 

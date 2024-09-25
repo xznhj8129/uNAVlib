@@ -303,7 +303,10 @@ class connMSP():
         with self.board.port_write_lock:
             current_write = time.time()
             if (current_write-self.board.last_write) < self.board.min_time_between_writes:
-                time.sleep(max(self.board.min_time_between_writes-(current_write-self.board.last_write),0))
+                sleeptime = max(self.board.min_time_between_writes-(current_write-self.board.last_write))
+                time.sleep(sleeptime,0)
+                #print('SLEEPING',sleeptime)
+
             res = self.board.write(bufView)
             if flush:
                 self.board.flush()

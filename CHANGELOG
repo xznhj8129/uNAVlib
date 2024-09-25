@@ -1,3 +1,8 @@
+0.1.2: Changing lots of things related to how variables and enums are treated
+       Looked into how the flight loop works and messages are sent, things were far from optimal. Things will be much 
+       more aimed towards having a loop cycle of messages updating the flight data at a set rate rather than having the user script
+       query for them at execution because that causes major code slowdowns and message duplication
+
 0.1.1:  Major refactor, changes to how it handles enums and codes to enable easier development and use
         So far non-breaking, things may have broken without me noticing, but quick testing shows no problems with pre-existing examples
 
