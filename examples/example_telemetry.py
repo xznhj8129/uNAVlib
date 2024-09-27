@@ -2,7 +2,7 @@ import asyncio
 import socket
 import time
 from unavlib.control import UAVControl
-from unavlib.control import geospatial
+from unavlib.modules import geospatial
 from unavlib.modules.utils import inavutil
 
 async def telemetry_display(uav):
@@ -26,7 +26,6 @@ async def telemetry_display(uav):
 
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
-    mydrone.msp_override_channels=[1, 2, 3, 4, 13]
     mydrone.msp_receiver = False
     
     try:

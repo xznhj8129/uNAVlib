@@ -531,10 +531,10 @@ class UAVControl:
 
             telemetry_msgs_t = {}
             rc_interval_t = 0
-            for i in msp_telemetry_msgs:
+            for i in self.msp_telemetry_msgs:
                 telemetry_msgs_t[i] = time.time()
                 
-            telemetry_msgs = cycle(msp_telemetry_msgs)
+            telemetry_msgs = cycle(self.msp_telemetry_msgs)
 
             print('\n### Flight Control loop started ###')
             while self.run:
@@ -557,7 +557,7 @@ class UAVControl:
                 # Telemetry messages (slow)
                 for msg in telemetry_msgs:
                     lastsent = time.time() - telemetry_msgs_t[msg]
-                    if (time.time()-lastsent) >= (1.0 / telemetry_msgs[i]):
+                    if (time.time()-lastsent) >= (1.0 / telemetry_msgs_t[i]):
                         telemetry_msgs_t[msg] = time.time()
                         self.std_send(msg)
                         break # only send one per cycle
