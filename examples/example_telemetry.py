@@ -6,7 +6,7 @@ from unavlib.modules import geospatial
 from unavlib.modules.utils import inavutil
 
 async def telemetry_display(uav):
-    #uav.debugprint = True
+    uav.debugprint = True
     while 1:
         gpsd = uav.get_gps_data()
         speed = gpsd['speed']

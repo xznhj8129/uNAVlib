@@ -45,7 +45,7 @@ class UAVControl:
             baudrate=baudrate,
             min_time_between_writes = self.mspy_min_time_between_writes)  # MSPy instance
 
-        self.run = True
+        self.run = False
         self.connected = None
         self.device = device
         self.baudrate = baudrate
@@ -291,6 +291,7 @@ class UAVControl:
         return active_modes
 
     def get_board_modes(self):
+        if not self.run: self.std_send(inavutil.msp.MSP2_INAV_STATUS)
         boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
         return  boardmodes
 
@@ -337,9 +338,13 @@ class UAVControl:
         else:
             return None
 
+    def get_rc_channels(self):
+        if not self.run: self.std_send(inavutil.msp.MSP_RC)
+        self.channels = self.board.RC['channels']
+        return self.channels
+
     def get_sensor_config(self):
-        #ret = self.std_send(inavutil.msp.MSP_SENSOR_CONFIG)
-        #if ret:
+        if not self.run: self.std_send(inavutil.msp.MSP_SENSOR_CONFIG)
         self.sensors = {
             'accelerationSensor': self.board.SENSOR_CONFIG['acc_hardware'], 
             'baroSensor': self.board.SENSOR_CONFIG['baro_hardware'], 
@@ -348,32 +353,33 @@ class UAVControl:
             'rangefinderType': self.board.SENSOR_CONFIG['rangefinder'], 
             'opticalFlowSensor': self.board.SENSOR_CONFIG['opflow']
             }
-        #    return self.sensors
-        #else:
-        #    return None
 
     def get_attitude(self):
         # Request, read and process the ATTITUDE (Roll, Pitch and Yaw in degrees)
-        #if self.std_send(inavutil.msp.MSP_ATTITUDE):
+        if not self.run: self.std_send(inavutil.msp.MSP_ATTITUDE)
         self.attitude = {"pitch": self.board.SENSOR_DATA['kinematics'][1],
                     "yaw": self.board.SENSOR_DATA['kinematics'][2],
                     "roll": self.board.SENSOR_DATA['kinematics'][0]}
         return self.attitude
     
     def get_altitude(self):
-        #if self.std_send(inavutil.msp.MSP_ALTITUDE):
+        if not self.run: self.std_send(inavutil.msp.MSP_ALTITUDE)
         self.alt = self.board.SENSOR_DATA['altitude']
         return self.alt
 
     def get_imu(self):
-        #if self.stf_send(inavutil.msp.MSP_RAW_IMU):
+        if not self.run: self.stf_send(inavutil.msp.MSP_RAW_IMU)
         self.imu = {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
                 "gyroscope": self.board.SENSOR_DATA['gyroscope'],
                 "magnetometer": self.board.SENSOR_DATA['magnetometer']}
         return self.imu
 
+    def get_analog(self): # Ok, why do i send the data to another variable when it's already in there
+        if not self.run: self.std_send(inavutil.msp.MSP2_INAV_ANALOG)
+        return self.board.ANALOG
+
     def get_nav_status(self):
-        #if self.std_send(inavutil.msp.MSP_NAV_STATUS):
+        if not self.run: self.std_send(inavutil.msp.MSP_NAV_STATUS)
         self.nav_status = {
             "mode": self.board.NAV_STATUS['mode'],
             "state": self.board.NAV_STATUS['state'],
@@ -385,10 +391,10 @@ class UAVControl:
         return self.nav_status
 
     def get_gps_data(self):
-        #a = self.std_send(inavutil.msp.MSP_RAW_GPS)
+        a = True if self.run else self.std_send(inavutil.msp.MSP_RAW_GPS)
         b = self.std_send(inavutil.msp.MSP_COMP_GPS)
         c = self.std_send(inavutil.msp.MSP_GPSSTATISTICS)
-        if not b or not c:# or not a:
+        if not b or not c or not a:
             return None
         else:
             ret = self.board.GPS_DATA
@@ -535,6 +541,7 @@ class UAVControl:
                 telemetry_msgs_t[i] = time.time()
                 
             telemetry_msgs = cycle(self.msp_telemetry_msgs)
+            self.run = True
 
             print('\n### Flight Control loop started ###')
             while self.run:

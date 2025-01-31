@@ -93,9 +93,7 @@ class processMSP():
         self.board.GPS_DATA['alt'] = self.board.readbytes(data, size=16, unsigned=True)
         self.board.GPS_DATA['speed'] = self.board.readbytes(data, size=16, unsigned=True)
         self.board.GPS_DATA['ground_course'] = self.board.readbytes(data, size=16, unsigned=True)
-
-        if self.board.INAV:
-            self.board.GPS_DATA['hdop'] = self.board.readbytes(data, size=16, unsigned=True)
+        self.board.GPS_DATA['hdop'] = self.board.readbytes(data, size=16, unsigned=True)
 
     def process_MSP_COMP_GPS(self, data):
         self.board.GPS_DATA['distanceToHome'] = self.board.readbytes(data, size=16, unsigned=True)

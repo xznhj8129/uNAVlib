@@ -21,11 +21,12 @@ async def main():
         )
     print("Connected to the flight controller")
     mydrone.msp_receiver = False
+    mydrone.debugprint = False
     
     try:
         await mydrone.connect()
-
-        await self.telemetry_init()
+        await mydrone.telemetry_init()
+        mydrone.load_modes_config()
 
         while 1:
             t = time.time()
@@ -50,6 +51,7 @@ async def main():
             print(f"Navstatus: {navstatus}")
             print(f"cpuload: {mydrone.board.CONFIG['cpuload']}")
             print(f"cycleTime: {mydrone.board.CONFIG['cycleTime']}")
+            print(mydrone.get_board_modes())
 
             await asyncio.sleep(loop_time)
 

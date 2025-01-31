@@ -292,7 +292,7 @@ class connMSP():
         Considering RC_MAP==[0, 1, 3, 2, 4, 5, 6, 7]
         """
         data = self.convert(data, 16) # any values bigger than 255 need to be converted.
-                                      # RC and Motor commands go from 0 to 2000.
+                                      # RC and Motor commands go from 0 to 2000. (900 to 2100 ackshully)
 
         return self.send_RAW_msg(inavutil.msp.MSP_SET_RAW_RC, data)
 
