@@ -162,11 +162,6 @@ class UAVControl:
     def update_pid(self, pidname:str, error:float):
         return self.pids[pidname](error)
 
-    def run_sync(self, func, *args):
-        # Helper method to run synchronous methods of MSPy in an executor
-        # need to (maybe) wrap all the MSP FC comm functions in here with this
-        return asyncio.get_running_loop().run_in_executor(self.executor, func, *args)
-
     @staticmethod
     def deserialise_modes(buf):
         PERM_ARM = 0

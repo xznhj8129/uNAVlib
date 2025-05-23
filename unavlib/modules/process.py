@@ -953,6 +953,77 @@ class processMSP():
     #     for i in range(bytesRemaining):
     #         self.board.TRANSPONDER['data'].append(self.board.readbytes(data, size=8, unsigned=True))
 
+
+    # implement new functions below
+
+    def process_MSP_NAV_STATUS(self,data):
+        self.board.NAV_STATUS['mode'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['state'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['active_wp_action'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['active_wp_number'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['error'] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.NAV_STATUS['heading_hold_target'] = self.board.readbytes(data, size=16, unsigned=True)
+
+    def process_MSP_WP(self, data):
+        self.board.WP['wp_no'] = self.board.readbytes(data, size=8, unsigned=True)      
+        self.board.WP['wp_action'] = self.board.readbytes(data, size=8, unsigned=True)   
+        self.board.WP['lat'] = self.board.readbytes(data, size=32, unsigned=False)   
+        self.board.WP['lon'] = self.board.readbytes(data, size=32, unsigned=False)  
+        self.board.WP['alt'] = self.board.readbytes(data, size=32, unsigned=False)  
+        self.board.WP['p1'] = self.board.readbytes(data, size=16, unsigned=False)   
+        self.board.WP['p2'] = self.board.readbytes(data, size=16, unsigned=False)  
+        self.board.WP['p3'] = self.board.readbytes(data, size=16, unsigned=False)  
+        self.board.WP['flag'] = self.board.readbytes(data, size=8, unsigned=True)   
+
+    def process_MSP_WP_GETINFO(self,data):
+        self.board.WP_INFO["reserved"] = self.board.readbytes(data, size=8, unsigned=True),   
+        self.board.WP_INFO["NAV_MAX_WAYPOINTS"] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.WP_INFO["isWaypointListValid"] = self.board.readbytes(data, size=8, unsigned=True)
+        self.board.WP_INFO["WaypointCount"] = self.board.readbytes(data, size=8, unsigned=True)   
+
+    def process_MSP_SET_WP(self, data):
+        # response to MSP_SET_WP returns the packed waypoint back
+        wp_no, action, lat, lon, alt, p1, p2, p3, flag = struct.unpack('<BBiiihhhB', data)
+        self.board.WP = {
+            'wp_no':           wp_no,
+            'wp_action':       action,
+            'lat':             lat,
+            'lon':             lon,
+            'alt':             alt,
+            'p1':               p1,
+            'p2':               p2,
+            'p3':               p3,
+            'flag':            flag
+        }
+
+    def _process_MSP_WP(self, data):
+        # response to MSP_WP (get waypoint #) is the same format
+        wp_no, action, lat, lon, alt, p1, p2, p3, flag = struct.unpack('<BBiiihhhB', data)
+        self.board.WP = {
+            'wp_no':           wp_no,
+            'wp_action':       action,
+            'lat':             lat,
+            'lon':             lon,
+            'alt':             alt,
+            'p1':               p1,
+            'p2':               p2,
+            'p3':               p3,
+            'flag':            flag
+        }
+
+    def process_MSP_WP_GETINFO(self, data):
+        # returns: reserved, max_waypoints, isValid flag, waypoint_count (4 bytes)
+        reserved, maxwps, valid, count = struct.unpack('<BBBB', data)
+        self.board.WP_INFO = {
+            'reserved':            reserved,
+            'NAV_MAX_WAYPOINTS':   maxwps,
+            'isWaypointListValid': bool(valid),
+            'WaypointCount':       count
+        }
+
+
+    # in yamspy, but unimplemented
+
     def process_MSP_SET_TRANSPONDER_CONFIG(self, data):
         logging.info("Transponder config saved")
 
@@ -1039,31 +1110,3 @@ class processMSP():
         
     def process_MSP_SET_RTC(self, data):
         logging.info('Real time clock set')
-
-
-    # unavlib new functions below
-
-    def process_MSP_NAV_STATUS(self,data):
-        self.board.NAV_STATUS['mode'] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.NAV_STATUS['state'] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.NAV_STATUS['active_wp_action'] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.NAV_STATUS['active_wp_number'] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.NAV_STATUS['error'] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.NAV_STATUS['heading_hold_target'] = self.board.readbytes(data, size=16, unsigned=True)
-
-    def process_MSP_WP(self, data):
-        self.board.WP['wp_no'] = self.board.readbytes(data, size=8, unsigned=True)      
-        self.board.WP['wp_action'] = self.board.readbytes(data, size=8, unsigned=True)   
-        self.board.WP['lat'] = self.board.readbytes(data, size=32, unsigned=False)   
-        self.board.WP['lon'] = self.board.readbytes(data, size=32, unsigned=False)  
-        self.board.WP['alt'] = self.board.readbytes(data, size=32, unsigned=False)  
-        self.board.WP['p1'] = self.board.readbytes(data, size=16, unsigned=False)   
-        self.board.WP['p2'] = self.board.readbytes(data, size=16, unsigned=False)  
-        self.board.WP['p3'] = self.board.readbytes(data, size=16, unsigned=False)  
-        self.board.WP['flag'] = self.board.readbytes(data, size=8, unsigned=True)   
-
-    def process_MSP_WP_GETINFO(self,data):
-        self.board.WP_INFO["reserved"] = self.board.readbytes(data, size=8, unsigned=True),   
-        self.board.WP_INFO["NAV_MAX_WAYPOINTS"] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.WP_INFO["isWaypointListValid"] = self.board.readbytes(data, size=8, unsigned=True)
-        self.board.WP_INFO["WaypointCount"] = self.board.readbytes(data, size=8, unsigned=True)   

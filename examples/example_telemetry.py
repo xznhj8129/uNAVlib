@@ -1,47 +1,59 @@
+# example_telemetry.py
+
 import asyncio
-import socket
-import time
-from unavlib.control import UAVControl
+import traceback
+from unavlib.control.uavcontrol import UAVControl
 from unavlib.modules import geospatial
-from unavlib.modules.utils import inavutil
 
 async def telemetry_display(uav):
     uav.debugprint = True
     print('start telemetry')
-    while 1:
-        print('telemetry')
-        gpsd = uav.get_gps_data()
-        speed = gpsd['speed']
-        alt = uav.get_altitude()
-        pos = geospatial.GPSposition(gpsd['lat'], gpsd['lon'], alt)
-        gyro = uav.get_attitude()
-        print('\n')
-        print("Channels:",uav.channels)
-        print('Modes:', uav.board.CONFIG['mode'], uav.get_active_modes())
-        print('Position:', pos)
-        print('Attitude:', gyro)
-        print('Altitude:', alt)
-        print(f"Navstatus: {uav.get_nav_status()}")
+    try:
+        await asyncio.sleep(1)
+        while True:
+            print('')
+            print('#'*54)
+            alt  = await uav.get_altitude()
+            gpsd = await uav.get_gps_data()
+            if gpsd:
+                speed = gpsd['speed']
+                pos   = geospatial.GPSposition(gpsd['lat'], gpsd['lon'], alt)
+                print('Speed:', speed)
+                print('Position:', pos)
+            else:
+                print("No GPS data yet")
+            gyro  = await uav.get_attitude()
+            nav   = await uav.get_nav_status()
 
-        await asyncio.sleep(0.5)
-    uav.stop()
+            channels = await uav.get_rc_channels()
+            print("Channels:", channels)
+            print('Modes:', uav.board.CONFIG['mode'], uav.get_active_modes())
+            print('Attitude:', gyro)
+            print('Altitude:', alt)
+            print(f"Navstatus: {nav}")
+            print(uav.get_active_modes())
+
+            await asyncio.sleep(0.5)
+    except asyncio.CancelledError:
+        print("Telemetry display cancelled")
 
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
     mydrone.msp_receiver = False
-    
+
     try:
         await mydrone.connect()
         print("Connected to the flight controller")
 
-        flight_control_task = asyncio.create_task(mydrone.flight_loop())
-        user_script_task = asyncio.create_task(telemetry_display(mydrone))
+        fc_task  = asyncio.create_task(mydrone.flight_loop())
+        tel_task = asyncio.create_task(telemetry_display(mydrone))
 
-        await asyncio.gather(flight_control_task, user_script_task)
-    except asyncio.CancelledError:
-        # clean-up if needed
-        raise
+        await asyncio.gather(fc_task, tel_task)
+    except Exception:
+        print("Error in main:")
+        traceback.print_exc()
     finally:
+        await mydrone.disconnect()
         print('\nConnection closed')
 
 if __name__ == '__main__':

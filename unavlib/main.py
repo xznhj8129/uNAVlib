@@ -702,21 +702,22 @@ class connMSP():
 
 
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
-        mspv = 1 if code <= 255 else 2 # should i set to 2 always?
+        mspv = 1 if code <= 255 else 2  # choose MSP protocol version
         bufView = mspctrl_prepare_raw_msg(mspv, code, data)
         with self.board.port_write_lock:
             current_write = time.time()
-            if (current_write-self.board.last_write) < self.board.min_time_between_writes:
-                sleeptime = max(self.board.min_time_between_writes-(current_write-self.board.last_write))
-                time.sleep(sleeptime,0)
-                #print('SLEEPING',sleeptime)
+            delta = current_write - self.board.last_write
+            if delta < self.board.min_time_between_writes:
+                sleeptime = self.board.min_time_between_writes - delta
+                time.sleep(sleeptime)
 
             res = self.board.write(bufView)
             if flush:
                 self.board.flush()
             self.board.last_write = current_write
-            logging.debug("RAW message sent: {}".format(bufView))
+            logging.debug(f"RAW message sent: {bufView}")
             return res
+
 
 
     def process_recv_data(self, dataHandler):
