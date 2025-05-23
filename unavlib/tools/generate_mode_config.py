@@ -66,7 +66,7 @@ if __name__ == '__main__':
     channels = [[]] * 18
     jsonmodes = {"board_info": boardinfo}
     for i in moderanges:
-        modename = inavutil.modesID.get(i[0])
+        modename = inavutil.modesID_INAV.get(i[0])
         ch = i[1]
         valmin = 900+(i[2]*25)
         valmax = 900+(i[3]*25)

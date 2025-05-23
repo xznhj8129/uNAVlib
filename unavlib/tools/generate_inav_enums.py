@@ -84,7 +84,17 @@ if __name__ == '__main__':
                 string+=s
 
     string+='\n\n# extracted from source'
-    for d in ['navigation','sensors']: #next(os.walk(arguments.src+'src/main/'))[1]: # we're not ready for that yet 
+    for d in [
+        'blackbox', 
+        'navigation',
+        'sensors',
+        'programming',
+        'rx',
+        'telemetry',
+        'io',
+        'flight',
+        'fc'
+        ]: #next(os.walk(arguments.src+'src/main/'))[1]: # we're not ready for that yet 
         #print(d)
         for f in glob.glob(f'{arguments.src}src/main/{d}/*.h'):
             extracted_enums = extract_enums_from_file(f)

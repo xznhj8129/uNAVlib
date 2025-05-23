@@ -52,6 +52,7 @@ class TCPSocket:
             raise RuntimeError("socket connection broken")
 
         return recvbuffer
+        
 class MSPContainer:
     """Container for MSP-related enums"""
     pass

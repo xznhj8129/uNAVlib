@@ -28,7 +28,6 @@
     Priority messages to implement:
         MSP_WP_MISSION_LOAD
         MSP_WP_MISSION_SAVE
-        MSP_NAV_CONFIG
         MSP_SET_HEAD
         MSP_SET_HEADING
         MSP_SONAR_ALTITUDE
@@ -67,7 +66,6 @@
         MSP_3D
         MSP_LED_STRIP_MODECOLOR
         MSP_SET_RAW_GPS
-        MSP_SET_BOX
         MSP_SET_MISC
         MSP_SET_NAV_CONFIG
         MSP_SET_3D
@@ -75,7 +73,6 @@
         MSP_RESERVE_1
         MSP_RESERVE_2
         MSP_DEBUGMSG
-        MSP_V2_FRAME
         MSP_SENSOR_STATUS
         MSP_GPSSVINFO
         MSP_SERVO_MIX_RULES
@@ -145,7 +142,6 @@
         MSP2_SENSOR_BAROMETER
         MSP2_SENSOR_AIRSPEED
         MSP_SET_BATTERY_CONFIG
-        MSP_CAMERA_CONTROL
         MSP_SET_ARMING_DISABLED
         MSP_ESC_SENSOR_DATA
         MSP_GPS_RESCUE_PIDS
@@ -179,3 +175,8 @@
 
     Ignored:
         to be figured out
+
+    Unused: Has a MSP number, but not used by INAV
+        MSP_NAV_CONFIG
+        MSP_CAMERA_CONTROL
+        MSP_SET_BOX

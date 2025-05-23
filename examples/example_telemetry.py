@@ -7,7 +7,9 @@ from unavlib.modules.utils import inavutil
 
 async def telemetry_display(uav):
     uav.debugprint = True
+    print('start telemetry')
     while 1:
+        print('telemetry')
         gpsd = uav.get_gps_data()
         speed = gpsd['speed']
         alt = uav.get_altitude()
@@ -36,6 +38,9 @@ async def main():
         user_script_task = asyncio.create_task(telemetry_display(mydrone))
 
         await asyncio.gather(flight_control_task, user_script_task)
+    except asyncio.CancelledError:
+        # clean-up if needed
+        raise
     finally:
         print('\nConnection closed')
 
