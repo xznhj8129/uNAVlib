@@ -188,7 +188,7 @@ class UAVControl:
         mranges.sort(key=lambda x: (x[0], x[1]))
         return mranges
 
-    def load_modes_config(self):
+    def load_modes_config(self, echo=False):
         mranges = []
         code_value = inavutil.msp.MSP_MODE_RANGES
         while True:
@@ -209,7 +209,7 @@ class UAVControl:
             vmin = 900 + i[2]*25
             vmax = 900 + i[3]*25
             flag = "OVERRIDE ALLOWED" if ch in self.msp_override_channels else ""
-            print(f"ID: {i[0]}\t{name:<16s}:\t{auxn} (channel {ch})\t= {vmin} to {vmax}\t{flag}")
+            if echo: print(f"ID: {i[0]}\t{name:<16s}:\t{auxn} (channel {ch})\t= {vmin} to {vmax}\t{flag}")
             self.modes[i[0]] = [ch, [vmin, vmax]]
 
     def load_modes_config_file(self, mode_config_file): 
@@ -261,18 +261,6 @@ class UAVControl:
         self.channels[ch-1] = pwm
         print(f'mode switch {inavutil.modesID_INAV.get(mode)} to {on} ch {ch-1} to {pwm}')
 
-    def get_active_modes(self):
-        act = []
-        for m, (ch, pr) in self.modes.items():
-            if self.channels[ch] == sum(pr)//2:
-                act.append(m)
-        return act
-
-    def get_board_modes(self):
-        if not self.run:
-            # fire-and-forget
-            asyncio.create_task(self.std_send(inavutil.msp.MSP2_INAV_STATUS))
-        return self.board.process_mode(self.board.CONFIG['mode'])
 
     def is_override_active(self):
         if self.msp_receiver and inavutil.modesID_INAV.MSP_RC_OVERRIDE in self.active_modes:
@@ -302,6 +290,22 @@ class UAVControl:
 
     def pwm_clamp(self, n:int):
         return max(min(self.pwm_range[0], n), self.pwm_range[1])
+
+    def get_active_modes(self) -> list:
+        active_modes = []
+        for mode, (channel, pwm_range) in self.modes.items():
+            chi = channel-1
+            print(mode, self.channels[chi], (channel, pwm_range))
+            if self.channels[chi] <= pwm_range[1] and self.channels[chi] >= pwm_range[0]:
+                print('^^^^^')
+                active_modes.append(mode)
+        return active_modes
+
+    async def get_board_modes(self):
+        if not self.run: 
+            await self.std_send(inavutil.msp.MSP2_INAV_STATUS)
+        boardmodes = self.board.process_mode(self.board.CONFIG['mode'])
+        return  boardmodes
 
     async def get_rc_channels(self):
         if not self.run:
@@ -444,13 +448,16 @@ class UAVControl:
                 self.msp_override_active = self.is_override_active() if self.msp_override else False
 
                 # RC send
-                if (time.time() - telemetry_msgs_t[inavutil.msp.MSP_RC]) >= (1.0 / self.rc_interval) \
-                   and (self.msp_receiver or self.msp_override_active):
-                    telemetry_msgs_t[inavutil.msp.MSP_RC] = time.time()
-                    sent = await self.run_sync(self.board.send_RAW_RC, self.channels)
-                    if sent:
-                        dh = await self.run_sync(self.board.receive_msg)
-                        await self.run_sync(self.board.process_recv_data, dh)
+                if (self.msp_receiver or self.msp_override_active):
+                    if inavutil.msp.MSP_SET_RAW_RC not in telemetry_msgs_t:
+                        telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC] = time.time()
+                        
+                    if (time.time() - telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC]) >= (1.0 / self.rc_interval):
+                        telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC] = time.time()
+                        sent = await self.run_sync(self.board.send_RAW_RC, self.channels)
+                        if sent:
+                            dh = await self.run_sync(self.board.receive_msg)
+                            await self.run_sync(self.board.process_recv_data, dh)
 
                 # slow telemetry
                 for msg in telemetry_msgs:
