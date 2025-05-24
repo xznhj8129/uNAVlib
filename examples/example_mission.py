@@ -95,7 +95,7 @@ async def my_plan(uav):
 
 async def main():
     mydrone = UAVControl(device='/dev/ttyUSB0', baudrate=115200, platform="AIRPLANE")
-    mydrone.msp_override_channels = [1,2,3,4,5,6,12,13,14]
+    mydrone.msp_override_allowed_ch = [1,2,3,4,5,6,12,13,14]
     mydrone.msp_receiver = True
 
     try:

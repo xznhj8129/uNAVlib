@@ -50,16 +50,13 @@ class UAVControl:
         self.device = device
         self.baudrate = baudrate
         self.executor = ThreadPoolExecutor()
-        self.chorder = [
-            'roll','pitch','throttle','yaw',
-            'ch5','ch6','ch7','ch8','ch9','ch10',
-            'ch11','ch12','ch13','ch14','ch15','ch16',
-            'ch17','ch18'
-        ]
+        self.chorder = ['roll', 'pitch', 'throttle', 'yaw', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9', 'ch10', 'ch11', 'ch12', 'ch13', 'ch14', 'ch15', 'ch16', 'ch17', 'ch18']
         self.channels = [900] * 16
         self.pwm_range = [900,2100]
         self.pwm_midpoint = mean(self.pwm_range)
-        self.channels[0:4] = [1500]*4
+        self.channels[0] = 1500 # bad things happens if sticks not centered
+        self.channels[1] = 1500
+        self.channels[3] = 1500
         self.modes = {}
         self.active_modes = []
         self.mode_range = [900,2100]
@@ -69,8 +66,9 @@ class UAVControl:
         self.pids = {}
         self.msp_receiver = False
         self.msp_override_active = False
-        self.msp_override_channels = []
-        self.rc_interval = 100  # Hz
+        self.msp_override_allowed_ch = []
+        self.msp_override_channels = {}
+        self.rc_interval = 10 # Hz
         self.telemetry_data_init = False
 
         self.init_msp_msgs = [
@@ -208,9 +206,14 @@ class UAVControl:
             ch = auxn+5
             vmin = 900 + i[2]*25
             vmax = 900 + i[3]*25
-            flag = "OVERRIDE ALLOWED" if ch in self.msp_override_channels else ""
+            flag = "OVERRIDE ALLOWED" if ch in self.msp_override_allowed_ch else ""
             if echo: print(f"ID: {i[0]}\t{name:<16s}:\t{auxn} (channel {ch})\t= {vmin} to {vmax}\t{flag}")
             self.modes[i[0]] = [ch, [vmin, vmax]]
+
+        if echo:
+            print('MSP Override Allowed:')
+            for ch in self.msp_override_allowed_ch:
+                print(f"Channel {ch}")
 
     def load_modes_config_file(self, mode_config_file): 
         with open(mode_config_file,"r") as f:
@@ -295,9 +298,7 @@ class UAVControl:
         active_modes = []
         for mode, (channel, pwm_range) in self.modes.items():
             chi = channel-1
-            print(mode, self.channels[chi], (channel, pwm_range))
             if self.channels[chi] <= pwm_range[1] and self.channels[chi] >= pwm_range[0]:
-                print('^^^^^')
                 active_modes.append(mode)
         return active_modes
 
@@ -310,8 +311,11 @@ class UAVControl:
     async def get_rc_channels(self):
         if not self.run:
             await self.std_send(inavutil.msp.MSP_RC)
-        self.channels = self.board.RC['channels']
-        return self.channels
+        return self.board.RC['channels']
+
+    def set_msp_override_channel(self, channel, val):
+        if channel in self.msp_override_allowed_ch:
+            self.msp_override_channels[channel] = val
 
     async def get_attitude(self):
         if not self.run:
@@ -440,25 +444,55 @@ class UAVControl:
         telemetry_msgs = cycle(self.msp_telemetry_msgs)
 
         self.run = True
+        await self.get_rc_channels()
         print('\n### Flight Control loop started ###')
         try:
             while self.run:
+                self.channels = self.board.RC['channels']
+                
                 start = time.time()
                 self.armed = self.board.bit_check(self.board.CONFIG['mode'], 0)
                 self.msp_override_active = self.is_override_active() if self.msp_override else False
 
                 # RC send
+                
+
                 if (self.msp_receiver or self.msp_override_active):
-                    if inavutil.msp.MSP_SET_RAW_RC not in telemetry_msgs_t:
+                    if (time.time() - telemetry_msgs_t.get(inavutil.msp.MSP_SET_RAW_RC, 0)) >= (1.0 / self.rc_interval):
                         telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC] = time.time()
                         
-                    if (time.time() - telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC]) >= (1.0 / self.rc_interval):
-                        telemetry_msgs_t[inavutil.msp.MSP_SET_RAW_RC] = time.time()
-                        sent = await self.run_sync(self.board.send_RAW_RC, self.channels)
-                        if sent:
-                            dh = await self.run_sync(self.board.receive_msg)
-                            await self.run_sync(self.board.process_recv_data, dh)
+                        # Create a fresh list of the correct length (e.g., 17 based on your FC)
+                        # Initialize with safe mid-points or known non-flipping values for AUX
+                        current_rc_values_from_fc = self.board.RC['channels'] # Get current AUX values
+                        num_channels_to_send = len(current_rc_values_from_fc)
+                        masked_channels = [1500] * num_channels_to_send # Default to 1500
 
+                        # Copy AUX channels beyond the first 4 from the FC's current state
+                        for i in range(4, num_channels_to_send):
+                            masked_channels[i] = current_rc_values_from_fc[i]
+
+                        # --- Test with FIXED, DISTINCT stick values ---
+                        masked_channels[0] = 1111  # Test Roll
+                        masked_channels[1] = 1222  # Test Pitch
+                        masked_channels[2] = 1333  # Test Throttle
+                        masked_channels[3] = 1444  # Test Yaw
+                        masked_channels = masked_channels[:8]
+                        # --- End Test with FIXED values ---
+
+                        # Apply specific overrides from self.msp_override_channels if any (e.g., from telemetry_display)
+                        # This would overwrite the fixed test values if the channel numbers match.
+                        # For the T/Y flip test, you might temporarily disable this part:
+                        # for ch_one_based, val in self.msp_override_channels.items():
+                        #     if ch_one_based in self.msp_override_allowed_ch: # self.msp_override_allowed_ch is 1-based
+                        #         if (ch_one_based - 1) < num_channels_to_send:
+                        #              masked_channels[ch_one_based - 1] = val
+                        print("self.board.RC['channels'\t",self.board.RC['channels'],len(self.board.RC['channels']))
+                        print(f"SENDING:\t\t\t {masked_channels}")
+
+                        if self.board.send_RAW_RC(masked_channels): # This is synchronous via executor
+                            # The ACK is received here, not MSP_RC data
+                            dataHandler = self.board.receive_msg() 
+                            self.board.process_recv_data(dataHandler)
                 # slow telemetry
                 for msg in telemetry_msgs:
                     if (time.time() - telemetry_msgs_t[msg]) >= (1.0 / self.msp_telemetry_msgs[msg]):
