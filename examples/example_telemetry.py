@@ -17,23 +17,22 @@ def telemetry_display_sync(uav: UAVControl):
 
     while True:
         alt = uav.get_altitude()
-        gpsd = uav.get_gps_data()
-        if gpsd:
-            speed = gpsd["speed"]
-            pos = geospatial.GPSposition(gpsd["lat"], gpsd["lon"], alt)
-        else:
-            print("No GPS data yet")
+        if uav.gps_enabled:
+            gpsd = uav.get_gps_data()
+            if gpsd:
+                speed = gpsd["speed"]
+                pos = geospatial.GPSposition(gpsd["lat"], gpsd["lon"], alt)
+            nav = uav.get_nav_status()
+            print(f"Nav: {nav}")
 
         gyro = uav.get_attitude()
-        nav = uav.get_nav_status()
 
         channels = uav.get_rc_channels()
         am = uav.get_active_modes()
         override = uav.is_override_active()
 
-        print(gyro)
-        print(nav)
-        print(channels)
+        print(f"Gyro: {gyro}")
+        print(f"Channels: {channels}")
         if override:
             print("OVERRIDE")
 
@@ -44,11 +43,17 @@ def telemetry_display_sync(uav: UAVControl):
 
 
 async def main():
-    mydrone = UAVControl(device="/dev/ttyACM0", baudrate=115200, platform="COPTER")
-    mydrone.msp_receiver = False
-    mydrone.msp_override_allowed_ch = [1, 2, 3, 4]
+    mydrone = UAVControl(
+        device="/dev/ttyACM0", 
+        baudrate=115200, 
+        platform="COPTER", 
+        receiver="serial", 
+        GPS=False, 
+        msp_override_ch=[1,2,3,4]
+    )
 
     try:
+        # Blocking connect
         await asyncio.to_thread(mydrone.connect)
         print("Connected to the flight controller")
 
