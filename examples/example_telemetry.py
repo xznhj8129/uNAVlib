@@ -38,7 +38,7 @@ async def telemetry_display(uav):
             print(f"Navstatus: {nav}")
             print('Override:',uav.is_override_active())
 
-            if inavutil.modesID_INAV.FAILSAFE in bm:
+            if inavutil.modesID_INAV.FAILSAFE in am:
                 print("FAILSAFE!")
             
 
