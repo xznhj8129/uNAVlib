@@ -85,6 +85,9 @@ class processMSP():
         self.board.RC['active_channels'] = n_channels
         self.board.RC['channels'] = [self.board.readbytes(data, size=16, unsigned=True) for i in range(n_channels)]
 
+        #inav/docs/Rx.md at master · iNavFlight/inav
+        #MSP_RC returns AERT regardless of channel map!!!
+
     def process_MSP_RAW_GPS(self, data):
         self.board.GPS_DATA['fix'] = self.board.readbytes(data, size=8, unsigned=True)
         self.board.GPS_DATA['numSat'] = self.board.readbytes(data, size=8, unsigned=True)

@@ -704,17 +704,21 @@ class connMSP():
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
         mspv = 1 if code <= 255 else 2  # choose MSP protocol version
         bufView = mspctrl_prepare_raw_msg(mspv, code, data)
+
+        # self.board is the MSPy instance. Access its attributes.
         with self.board.port_write_lock:
-            current_write = time.time()
-            delta = current_write - self.board.last_write
+            current_write_timestamp = time.time() # Use a distinct variable name
+
+            # Access last_write and min_time_between_writes via self.board
+            delta = current_write_timestamp - self.board.last_write
             if delta < self.board.min_time_between_writes:
                 sleeptime = self.board.min_time_between_writes - delta
                 time.sleep(sleeptime)
 
-            res = self.board.write(bufView)
+            res = self.board.write(bufView) # Call MSPy's write method
             if flush:
-                self.board.flush()
-            self.board.last_write = current_write
+                self.board.flush() # Call MSPy's flush method
+            self.board.last_write = current_write_timestamp # Update MSPy's last_write
             logging.debug(f"RAW message sent: {bufView}")
             return res
 
