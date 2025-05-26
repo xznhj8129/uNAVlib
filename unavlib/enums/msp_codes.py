@@ -273,6 +273,7 @@ MSPCodes = {
     'MSP2_SEND_DSHOT_COMMAND': 12291,
     'MSP2_GET_VTX_DEVICE_STATUS': 12292,
     'MSP2_GET_OSD_WARNINGS': 12293,
+    'MSP2_INAV_SET_CUSTOM_OSD_ELEMENTS': 8450
 }
 # The idea is to automate, so only the dictionary above needs to be updated
 #R_MSPCodes = {v: i for i,v in MSPCodes.items()}

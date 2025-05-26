@@ -1113,3 +1113,6 @@ class processMSP():
         
     def process_MSP_SET_RTC(self, data):
         logging.info('Real time clock set')
+
+    def process_MSP2_INAV_SET_CUSTOM_OSD_ELEMENTS(self,data):
+        logging.info('process_MSP2_INAV_SET_CUSTOM_OSD_ELEMENTS')

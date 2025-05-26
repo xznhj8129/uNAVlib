@@ -1,6 +1,5 @@
 # uavcontrol.py
 # Synchronous flight-control module (no async/await).
-# Restores missing get_active_modes().
 
 import threading
 import argparse
@@ -44,10 +43,49 @@ class UAVControl:
     ):
         # ----- INITIAL SET-UP -----------------------------------------
         self.debugprint = False
+        self.gps_enabled = GPS
+        self.msp_receiver = True if receiver=="msp" else False
         self.loop_time = 1 / 250  # Hz
-        self.mspy_min_time_between_writes = 1 / 50
+        self.mspy_min_time_between_writes = 1 / 100
         self.rc_interval = 20           # Hz
         default_tele_hz = 50
+
+        # ----- MSP MESSAGE LISTS --------------------------------------
+        self.init_msp_msgs = [
+            inavutil.msp.MSP_API_VERSION,
+            inavutil.msp.MSP_FC_VARIANT,
+            inavutil.msp.MSP_FC_VERSION,
+            inavutil.msp.MSP_BUILD_INFO,
+            inavutil.msp.MSP_BOARD_INFO,
+            inavutil.msp.MSP_UID,
+            inavutil.msp.MSP_ACC_TRIM,
+            inavutil.msp.MSP_NAME,
+            inavutil.msp.MSP_STATUS,
+            inavutil.msp.MSP_STATUS_EX,
+            inavutil.msp.MSP_BATTERY_CONFIG,
+            inavutil.msp.MSP_BATTERY_STATE,
+            inavutil.msp.MSP_BOXIDS,
+            inavutil.msp.MSP2_INAV_STATUS,
+            inavutil.msp.MSP2_INAV_ANALOG,
+            inavutil.msp.MSP_VOLTAGE_METER_CONFIG,
+            inavutil.msp.MSP_SENSOR_CONFIG,
+            inavutil.msp.MSP_RC,
+            inavutil.msp.MSP_RAW_GPS,
+        ]
+        self.msp_telemetry_msgs = {
+            inavutil.msp.MSP2_INAV_ANALOG: default_tele_hz,
+            inavutil.msp.MSP_BATTERY_STATE: default_tele_hz,
+            inavutil.msp.MSP2_INAV_STATUS: default_tele_hz,
+            inavutil.msp.MSP_MOTOR: default_tele_hz,
+            inavutil.msp.MSP_RC: default_tele_hz,
+            inavutil.msp.MSP_ATTITUDE: default_tele_hz,
+            inavutil.msp.MSP_ALTITUDE: default_tele_hz,
+            inavutil.msp.MSP_RAW_IMU: default_tele_hz,
+        }
+        if self.gps_enabled:
+            self.msp_telemetry_msgs[inavutil.msp.MSP_RAW_GPS] = default_tele_hz
+            self.msp_telemetry_msgs[inavutil.msp.MSP_NAV_STATUS] = default_tele_hz
+
         self.mspy_loglevel = "INFO"
         self.mspy_timeout = 1 / 100
         self.mspy_logfilename = "MSPy.log"
@@ -99,48 +137,10 @@ class UAVControl:
         self.supermodes = {}
         self.active_supermodes = []
         self.pids = {}
-        self.gps_enabled = GPS
-        self.msp_receiver = True if receiver=="msp" else False
         self.msp_override_active = False
         self.msp_override_allowed_ch = msp_override_ch
         self.msp_override_channels = {}
         self.telemetry_data_init = False
-
-        # ----- MSP MESSAGE LISTS --------------------------------------
-        self.init_msp_msgs = [
-            inavutil.msp.MSP_API_VERSION,
-            inavutil.msp.MSP_FC_VARIANT,
-            inavutil.msp.MSP_FC_VERSION,
-            inavutil.msp.MSP_BUILD_INFO,
-            inavutil.msp.MSP_BOARD_INFO,
-            inavutil.msp.MSP_UID,
-            inavutil.msp.MSP_ACC_TRIM,
-            inavutil.msp.MSP_NAME,
-            inavutil.msp.MSP_STATUS,
-            inavutil.msp.MSP_STATUS_EX,
-            inavutil.msp.MSP_BATTERY_CONFIG,
-            inavutil.msp.MSP_BATTERY_STATE,
-            inavutil.msp.MSP_BOXIDS,
-            inavutil.msp.MSP2_INAV_STATUS,
-            inavutil.msp.MSP2_INAV_ANALOG,
-            inavutil.msp.MSP_VOLTAGE_METER_CONFIG,
-            inavutil.msp.MSP_SENSOR_CONFIG,
-            inavutil.msp.MSP_RC,
-            inavutil.msp.MSP_RAW_GPS,
-        ]
-        self.msp_telemetry_msgs = {
-            inavutil.msp.MSP2_INAV_ANALOG: default_tele_hz,
-            inavutil.msp.MSP_BATTERY_STATE: default_tele_hz,
-            inavutil.msp.MSP2_INAV_STATUS: default_tele_hz,
-            inavutil.msp.MSP_MOTOR: default_tele_hz,
-            inavutil.msp.MSP_RC: default_tele_hz,
-            inavutil.msp.MSP_ATTITUDE: default_tele_hz*2,
-            inavutil.msp.MSP_ALTITUDE: default_tele_hz,
-            inavutil.msp.MSP_RAW_IMU: default_tele_hz,
-        }
-        if self.gps_enabled:
-            self.msp_telemetry_msgs[inavutil.msp.MSP_RAW_GPS] = default_tele_hz
-            self.msp_telemetry_msgs[inavutil.msp.MSP_NAV_STATUS] = default_tele_hz
 
         # ----- OTHER STATE --------------------------------------------
         self.voltage = 0
@@ -524,6 +524,54 @@ class UAVControl:
                 "WaypointCount": self.board.WP_INFO["WaypointCount"]
             }
 
+    def set_custom_osd_text(self, index: int, text: str):
+        """
+        Sends MSP2_INAV_SET_CUSTOM_OSD_ELEMENTS (0x2102 / 8450) with only index & static text.
+        Zeroes out all parts & visibility. Matches your firmware:
+        #define OSD_CUSTOM_ELEMENT_TEXT_SIZE 16
+        #define CUSTOM_ELEMENTS_PARTS       3
+        """
+        CODE      = 8450   # 0x2102
+        PARTS     = 3
+        TEXT_SIZE = 16     # firmware’s OSD_CUSTOM_ELEMENT_TEXT_SIZE
+        MAX_TEXT  = TEXT_SIZE - 1  # elementText is TEXT_SIZE-1 bytes
+
+        # 1) sanity-check index
+        if not (0 <= index < 8):   # MAX_CUSTOM_ELEMENTS = 8
+            raise ValueError(f"index must be 0–7, got {index}")
+
+        # 2) build payload
+        buf = bytearray()
+        buf.append(index)           # elementIndex
+
+        # part data: first partType=1, rest partType=0
+        for i in range(PARTS):
+            buf.append(1 if i == 0 else 0)    # partType
+            buf += (0).to_bytes(2, 'little')  # partValue
+
+        # visibility: all zero
+        buf.append(0)
+        buf += (0).to_bytes(2, 'little')
+
+        # static text: TEXT_SIZE-1 bytes
+        max_text = TEXT_SIZE - 1
+        b = text.encode('ascii', errors='ignore')[:max_text]
+        b = b.ljust(max_text, b'\0')
+        buf += b
+
+        # 3) send it
+        resp = self.std_send(CODE, data=buf)
+        
+        # 4) mirror your set_wp pattern: no payload expected back
+        if resp and resp.get('packet_error', 1) == 0 and resp.get('unsupported', 0) == 0:
+            return resp
+        else:
+            print(f"uavcontrol.set_custom_osd_element: failed (resp={resp})")
+            return None
+
+
+
+
     # ------------------------------------------------------------------ #
     # TELEMETRY INIT                                                     #
     # ------------------------------------------------------------------ #
@@ -574,7 +622,7 @@ class UAVControl:
             while self.run:
                 current_loop_start_time = time.time()
 
-                self.channels = self.board.RC.get("channels", self.channels)[:16]
+                self.channels = self.board.RC["channels"][:16]
                 self.armed = self.board.bit_check(self.board.CONFIG["mode"], 0)
                 
                 self.msp_override_active = (
@@ -624,16 +672,14 @@ class UAVControl:
 
 
         except Exception: # Catch-all for the flight loop
-            if shared.run:
-                print('!!! Error in Flight Control loop !!!')
-                print(traceback.format_exc())
-                # self.disconnect() # disconnect is called in finally
-                # self.run = False  # run is set in finally
-                # No return 1 here, let finally handle cleanup
+            print('!!! Error in Flight Control loop !!!')
+            print(traceback.format_exc())
+            # self.disconnect() # disconnect is called in finally
+            # self.run = False  # run is set in finally
+            # No return 1 here, let finally handle cleanup
         finally:
             print("\n### Flight Control loop finished ###")
             self.disconnect() # Ensure disconnection
-            self.run = False    # Ensure loop terminates if it broke out
 
     # ------------------------------------------------------------------ #
     # HELPER                                                             

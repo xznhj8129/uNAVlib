@@ -1,5 +1,5 @@
 # uNAVlib
-**[Version: 0.1.1](CHANGELOG)**\
+**[Version: 0.1.2](CHANGELOG)**\
 \
 uNAV as in Unmanned INAV, or "u do the nav, i'm busy".\
 Fork of the now-inactive [YAMSPy](https://github.com/thecognifly/YAMSPy) library (Yet Another Implementation of [Multiwii](https://github.com/multiwii) Serial Protocol Python Interface), created by Ricardo de Azambuja; (specifically the [yb/stablle branch](https://github.com/thecognifly/YAMSPy/tree/yb/stable)). It is an SDK meant for developing the autonomous capabilities of [INAV](https://github.com/INAVFlight/INAV) and the potential for use with a companion computer (CC) such as a Raspberry Pi, NVIDIA Jetson, etc; basically allowing MAVSDK/Dronekit-like development for INAV. This assumes you already know what you are doing with INAV and know how to flash firmware to your board, set up UART connections, build custom firmware, flight mode configuration, etc. See old_readme.md for original information on installation, usage, advanced configuration, etc. 
