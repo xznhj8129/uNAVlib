@@ -1,5 +1,4 @@
 # uavcontrol.py
-# Synchronous flight-control module (no async/await).
 
 import threading
 import argparse
@@ -45,9 +44,10 @@ class UAVControl:
         self.debugprint = False
         self.gps_enabled = GPS
         self.msp_receiver = True if receiver=="msp" else False
-        self.loop_time = 1 / 250  # Hz
-        self.mspy_min_time_between_writes = 1 / 100
-        self.rc_interval = 20           # Hz
+        self.loop_time = 1.0 / 250  # Hz
+        self.mspy_min_time_between_writes = 1.0 / 100
+        self.rc_interval = 1.0 / 20           # Hz
+        self.mspy_timeout = 1 / 100
         default_tele_hz = 50
 
         # ----- MSP MESSAGE LISTS --------------------------------------
@@ -87,7 +87,6 @@ class UAVControl:
             self.msp_telemetry_msgs[inavutil.msp.MSP_NAV_STATUS] = default_tele_hz
 
         self.mspy_loglevel = "INFO"
-        self.mspy_timeout = 1 / 100
         self.mspy_logfilename = "MSPy.log"
         self.mspy_logfilemode = "a"
 
@@ -99,7 +98,7 @@ class UAVControl:
             min_time_between_writes=self.mspy_min_time_between_writes,
         )
 
-        self.run = False
+        self.loop_running = False
         self.connected = None
         self.device = device
         self.baudrate = baudrate
@@ -125,13 +124,16 @@ class UAVControl:
             "ch17",
             "ch18",
         ]
-        self.channels = [900] * 16
+        self.nchan = len(self.chorder)
+        self.defval = 1500
+        self.board_channels = [900] * self.nchan  # RC as it is on the flight controller
+        self.channels = [900] * self.nchan # RC as we modify them
         self.pwm_range = [900, 2100]
         self.pwm_midpoint = mean(self.pwm_range)
-        self.channels[0] = 1500
-        self.channels[1] = 1500
+        self.channels[0] = self.defval
+        self.channels[1] = self.defval
         #
-        self.channels[3] = 1500
+        self.channels[3] = self.defval
         self.modes = {}
         self.active_modes = []
         self.supermodes = {}
@@ -141,6 +143,7 @@ class UAVControl:
         self.msp_override_allowed_ch = msp_override_ch
         self.msp_override_channels = {}
         self.telemetry_data_init = False
+        self.functions_poll_fc = False # wether functions update directly from MSP message or just get stored data 
 
         # ----- OTHER STATE --------------------------------------------
         self.voltage = 0
@@ -174,12 +177,18 @@ class UAVControl:
     # CORE MSP I/O                                                       #
     # ------------------------------------------------------------------ #
     def std_send(self, msg_code:int, data=[]):
-        if self.board.send_RAW_msg(msg_code, data=data, blocking=None, timeout=None, flush=False):
-            dataHandler = self.board.receive_msg()
-            self.board.process_recv_data(dataHandler)
-            return dataHandler
-        else:
-            return None
+        try:
+            if self.board.send_RAW_msg(msg_code, data=data, blocking=None, timeout=None, flush=False):
+                dataHandler = self.board.receive_msg()
+                self.board.process_recv_data(dataHandler)
+                return dataHandler
+            else:
+                return None
+        except Exception:
+            print("Serial error:")
+            traceback.print_exc()
+            self.loop_running = False
+            self.disconnect()
 
     # ------------------------------------------------------------------ #
     # PID                                                                
@@ -341,13 +350,14 @@ class UAVControl:
         active = []
         for mode, (channel, pwm_range) in self.modes.items():
             chi = channel - 1
-            if pwm_range[0] <= self.channels[chi] <= pwm_range[1]:
+            if pwm_range[0] <= self.board_channels[chi] <= pwm_range[1]:
                 active.append(mode)
         return active
         
 
     def get_sensor_config(self):
-        if not self.run: self.std_send(inavutil.msp.MSP_SENSOR_CONFIG)
+        if not self.loop_running and self.functions_poll_fc: 
+            self.std_send(inavutil.msp.MSP_SENSOR_CONFIG)
         self.sensors = {
             'accelerationSensor': self.board.SENSOR_CONFIG['acc_hardware'], 
             'baroSensor': self.board.SENSOR_CONFIG['baro_hardware'], 
@@ -358,7 +368,8 @@ class UAVControl:
             }
 
     def get_imu(self):
-        if not self.run: self.stf_send(inavutil.msp.MSP_RAW_IMU)
+        if not self.loop_running and self.functions_poll_fc: 
+            self.std_send(inavutil.msp.MSP_RAW_IMU)
         self.imu = {"accelerometer": self.board.SENSOR_DATA['accelerometer'],
                 "gyroscope": self.board.SENSOR_DATA['gyroscope'],
                 "magnetometer": self.board.SENSOR_DATA['magnetometer']}
@@ -367,13 +378,14 @@ class UAVControl:
     def get_rc_channels(self):
         #inav/docs/Rx.md at master · iNavFlight/inav
         #MSP_RC returns AERT regardless of channel map!!!
-        if not self.run:
+        if not self.loop_running and self.functions_poll_fc:
             self.std_send(inavutil.msp.MSP_RC)
         chs = self.board.RC["channels"].copy()
         chs[self.chorder.index("roll")] = self.board.RC["channels"][0]
         chs[self.chorder.index("pitch")] = self.board.RC["channels"][1]
         chs[self.chorder.index("yaw")] = self.board.RC["channels"][2]
         chs[self.chorder.index("throttle")] = self.board.RC["channels"][3]
+        self.board_channels = chs
         return chs
 
     
@@ -386,15 +398,36 @@ class UAVControl:
         chs[self.chorder.index("throttle")] = self.board.RC["channels"][3]
         return chs[self.chorder.index(ch)]
 
+
     def set_rc_channel(self, ch:str, value:int): # uses string indexes
-        chi = self.chorder.index(ch)+1
-        if (self.msp_receiver) or (self.msp_override and chi in self.msp_override_allowed_ch):
-            self.msp_override_channels[self.chorder.index(ch)] = value
-        else:
-            return None
+        """Set an RC channel either in receiver mode (full channels)
+        or in override mode (only allowed channels)."""
+        idx = self.chorder.index(ch)
+        chi = idx + 1
+        #print('override',ch,idx,chi,value)
+        if self.msp_receiver:
+            # In receiver mode: replace the full channels array
+            self.channels[idx] = value
+
+        elif self.msp_override_active and chi in self.msp_override_allowed_ch:
+            # In override mode: store only the overridden channels
+            self.msp_override_channels[chi] = value
+
+    def serialise_rx(self) -> list[int]:
+        """
+        Build a 2*nchan byte payload: little-endian uint16 for each channel.
+        If omap has an entry for channel i, use it; otherwise use defval.
+        """
+        buf: list[int] = [0] * self.nchan
+        omap = self.msp_override_channels
+        for i in range(self.nchan):
+            v = omap.get(i+1, 0)
+            buf.append(v & 0xFF)
+            buf.append((v >> 8) & 0xFF)
+        return buf
 
     def get_attitude(self):
-        if not self.run:
+        if not self.loop_running and self.functions_poll_fc:
             self.std_send(inavutil.msp.MSP_ATTITUDE)
         self.attitude = {
             "pitch": self.board.SENSOR_DATA["kinematics"][1],
@@ -404,13 +437,13 @@ class UAVControl:
         return self.attitude
 
     def get_altitude(self):
-        if not self.run:
+        if not self.loop_running and self.functions_poll_fc:
             self.std_send(inavutil.msp.MSP_ALTITUDE)
         self.alt = self.board.SENSOR_DATA["altitude"]
         return self.alt
 
     def get_nav_status(self):
-        if not self.run:
+        if not self.loop_running and self.functions_poll_fc:
             self.std_send(inavutil.msp.MSP_NAV_STATUS)
         ns = self.board.NAV_STATUS
         self.nav_status = {
@@ -424,17 +457,33 @@ class UAVControl:
         return self.nav_status
 
     def get_gps_data(self):
-        a = True if self.run else self.std_send(inavutil.msp.MSP_RAW_GPS)
-        b = self.std_send(inavutil.msp.MSP_COMP_GPS)
-        c = self.std_send(inavutil.msp.MSP_GPSSTATISTICS)
-        if not b or not c or not a:
-            return None
+        if not self.loop_running and self.functions_poll_fc:
+            a = self.std_send(inavutil.msp.MSP_RAW_GPS)
+            b = self.std_send(inavutil.msp.MSP_COMP_GPS)
+            c = self.std_send(inavutil.msp.MSP_GPSSTATISTICS)
+            if not b or not c or not a:
+                return None
         else:
             ret = self.board.GPS_DATA
             ret['lat'] = ret['lat'] / 1e7
             ret['lon'] = ret['lon'] / 1e7
             ret['speed'] = ret['speed'] / 100
             return ret
+
+    # ------------------------------------------------------------------ #
+    # HELPER                                                             
+    # ------------------------------------------------------------------ #
+    def is_override_active(self):
+        
+        if (inavutil.modesID_INAV.MSP_RC_OVERRIDE in  self.get_active_modes()):
+            return True
+        else:
+            return False
+
+        #ch = self.modes[inavutil.modesID_INAV.MSP_RC_OVERRIDE][0] - 1
+        #v = self.board.RC["channels"][ch]
+        #rmin, rmax = self.modes[inavutil.modesID_INAV.MSP_RC_OVERRIDE][1]
+        #return rmin <= v <= rmax
 
 
     @staticmethod
@@ -579,6 +628,7 @@ class UAVControl:
         if not self.telemetry_data_init:
             for msg in self.init_msp_msgs:
                 self.std_send(msg)
+                time.sleep(0.1)
             self.telemetry_data_init = True
 
     # ------------------------------------------------------------------ #
@@ -586,7 +636,7 @@ class UAVControl:
     # ------------------------------------------------------------------ #
 
     def flight_loop(self):
-        
+        self.functions_poll_fc = True
         self.telemetry_init()
         if not self.board.INAV:
             raise Exception("Non-INAV board detected")
@@ -614,58 +664,57 @@ class UAVControl:
         # telemetry_msg_codes_cycle: An iterator that cycles through the MSP codes for telemetry
         telemetry_msg_codes_cycle = cycle(self.msp_telemetry_msgs.keys())
 
-        self.run = True
-        last_rc_send_time = 0 # Initialize to ensure first send
+        self.loop_running = True
+        last_rc_time = 0 # Initialize to ensure first send
 
         print("\n### Flight Control loop started ###")
         try:
-            while self.run:
-                current_loop_start_time = time.time()
+            while self.loop_running:
+                curtime = time.time()
 
-                self.channels = self.board.RC["channels"][:16]
-                self.armed = self.board.bit_check(self.board.CONFIG["mode"], 0)
+                self.board_channels = self.board.RC["channels"][:16]
+                self.armed = self.arm_check()
                 
                 self.msp_override_active = (
                     self.is_override_active() if self.msp_override else False
                 )
-
+                
                 # SEND RC ------------------------------------------------
-                if (current_loop_start_time - last_rc_send_time) >= (1.0 / self.rc_interval):
-                    if self.msp_receiver or self.msp_override_active:
-                        last_rc_send_time = current_loop_start_time # Update timestamp
-                        
-                        sent = True
-                        masked = self.channels.copy()
-                        
-                        for ch in self.msp_override_channels:
-                            if ch+1 in self.msp_override_allowed_ch:
-                                masked[ch] = self.msp_override_channels[ch]
+                if (curtime - last_rc_time) >= self.rc_interval:
+                    masked = self.channels.copy()
+                    
+                    for ch in self.msp_override_channels:
+                        if ch+1 in self.msp_override_allowed_ch:
+                            masked[ch] = self.msp_override_channels[ch]
+                
+                    if self.board.send_RAW_RC(masked):
+                        dataHandler = self.board.receive_msg()
+                        self.board.process_recv_data(dataHandler)
 
-                        if self.board.send_RAW_RC(masked):
-                            dataHandler = self.board.receive_msg()
-                            self.board.process_recv_data(dataHandler)
+                    last_rc_time = curtime
+
 
                 # TELEMETRY ---------------------------------------------
                 for _i in range(len(self.msp_telemetry_msgs)): 
                     msg_code = next(telemetry_msg_codes_cycle)
                     
-                    duration_since_last_send = current_loop_start_time - telemetry_last_sent_timestamp[msg_code]
+                    duration_since_last_send = curtime - telemetry_last_sent_timestamp[msg_code]
                     
                     desired_interval = 1.0 / self.msp_telemetry_msgs[msg_code]
                     
                     if duration_since_last_send >= desired_interval:
                         self.std_send(msg_code) 
-                        telemetry_last_sent_timestamp[msg_code] = current_loop_start_time # Update last sent timestamp
+                        telemetry_last_sent_timestamp[msg_code] = curtime # Update last sent timestamp
                         break # Sent one telemetry message, proceed to next flight_loop iteration
 
                 # TIMING ------------------------------------------------
-                elapsed_this_cycle = time.time() - current_loop_start_time
+                elapsed_this_cycle = time.time() - curtime
                 
                 sleep_duration = self.loop_time - elapsed_this_cycle
                 if sleep_duration > 0:
                     time.sleep(sleep_duration)
                 
-                final_cycle_time = time.time() - current_loop_start_time # For metrics
+                final_cycle_time = time.time() - curtime # For metrics
                 average_cycle.append(final_cycle_time)
                 average_cycle.popleft()
 
@@ -674,23 +723,7 @@ class UAVControl:
         except Exception: # Catch-all for the flight loop
             print('!!! Error in Flight Control loop !!!')
             print(traceback.format_exc())
-            # self.disconnect() # disconnect is called in finally
-            # self.run = False  # run is set in finally
-            # No return 1 here, let finally handle cleanup
         finally:
             print("\n### Flight Control loop finished ###")
             self.disconnect() # Ensure disconnection
-
-    # ------------------------------------------------------------------ #
-    # HELPER                                                             
-    # ------------------------------------------------------------------ #
-    def is_override_active(self):
-        if (
-            self.msp_receiver
-            and inavutil.modesID_INAV.MSP_RC_OVERRIDE in self.active_modes
-        ):
-            return True
-        ch = self.modes[inavutil.modesID_INAV.MSP_RC_OVERRIDE][0] - 1
-        v = self.board.RC["channels"][ch]
-        rmin, rmax = self.modes[inavutil.modesID_INAV.MSP_RC_OVERRIDE][1]
-        return rmin <= v <= rmax
+            self.loop_running = False 

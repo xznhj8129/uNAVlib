@@ -9,10 +9,11 @@ import serial
 from select import select
 from threading import Lock, RLock
 
-from .modules import msp_ctrl
 from .enums import inav_enums
 from .enums import msp_codes
 from .enums import msp_vars
+#from .modules import msp_ctrl
+#from .modules.boardconn import connMSP
 from .modules.utils import dict_reverse
 from .modules.utils import TCPSocket
 from .modules.process import processMSP
@@ -702,23 +703,23 @@ class connMSP():
 
 
     def send_RAW_msg(self, code, data=[], blocking=None, timeout=None, flush=False):
-        mspv = 1 if code <= 255 else 2  # choose MSP protocol version
+        mspv = 1 if code <= 255 else 2 
         bufView = mspctrl_prepare_raw_msg(mspv, code, data)
-
-        # self.board is the MSPy instance. Access its attributes.
         with self.board.port_write_lock:
-            current_write_timestamp = time.time() # Use a distinct variable name
-
-            # Access last_write and min_time_between_writes via self.board
-            delta = current_write_timestamp - self.board.last_write
+            current_write = time.time()
+            delta = current_write - self.board.last_write
             if delta < self.board.min_time_between_writes:
-                sleeptime = self.board.min_time_between_writes - delta
+                sleeptime = max(self.board.min_time_between_writes-(current_write-self.board.last_write),0)
                 time.sleep(sleeptime)
+                #sleeptime = self.board.min_time_between_writes - delta
+                #time.sleep(sleeptime)
+                #? Not sure
 
-            res = self.board.write(bufView) # Call MSPy's write method
+            res = self.board.write(bufView)
             if flush:
-                self.board.flush() # Call MSPy's flush method
-            self.board.last_write = current_write_timestamp # Update MSPy's last_write
+                self.board.flush()
+            self.board.last_write = current_write
+            self.board.total_sent += 1
             logging.debug(f"RAW message sent: {bufView}")
             return res
 
@@ -774,9 +775,16 @@ class MSPy:
 
     SIGNATURE_LENGTH = 32
 
-    def __init__(self, device, baudrate=115200, trials=1, 
-                 logfilename='MSPy.log', logfilemode='a', loglevel='INFO', timeout=1/100,
-                 use_tcp=False, min_time_between_writes = 1/100):
+    def __init__(self, 
+        device, 
+        baudrate=115200, 
+        trials=1, 
+        logfilename='MSPy.log', 
+        logfilemode='a', 
+        loglevel='INFO', 
+        timeout=1/100,
+        use_tcp=False, 
+        min_time_between_writes = 1/100):
 
         """
         Parameters
@@ -869,6 +877,7 @@ class MSPy:
         self.INAV = True #changed from False to True!
 
         self.last_write = time.time()
+        self.total_sent = 0
 
         # Preparing the method map
         self.method_map = {}
