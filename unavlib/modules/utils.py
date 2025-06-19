@@ -92,5 +92,7 @@ for attr_name in dir(inav_enums):
         if isinstance(attr, dict): 
             dict_2_class_add_to_class(inavutil, attr_name, attr)
 
+bfutil = EnumContainer()
+
 dict_2_class_add_to_class(inavutil, "msp", msp_codes.MSPCodes)
 #setattr(inavutil, 'msp', msp)

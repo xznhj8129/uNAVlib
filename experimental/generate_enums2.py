@@ -7,22 +7,8 @@ import enum
 import keyword
 import sys
 
-# --- Use the real unavlib ---
-try:
-    import unavlib
-    if not hasattr(unavlib, '__file__') or not unavlib.__file__:
-         raise ImportError("unavlib found but path (__file__) is missing or empty.")
-except ImportError as e:
-    print(f"Error: Could not import unavlib or determine its path. ({e})")
-    print("Please ensure unavlib is installed correctly.")
-    sys.exit(1)
-
-try:
-    from unavlib.enums import base_enums
-except (ImportError, ModuleNotFoundError):
-    print("Warning: Could not import base_enums from unavlib.enums. Assuming no base enums.")
-    base_enums = type('obj', (object,), {})() # Create empty object
-# --- End unavlib Handling ---
+import unavlib
+from unavlib.enums import base_enums
 
 
 # --- Patterns ---
@@ -88,7 +74,9 @@ def format_value_expression(expr_str):
     if not expr_str: return None
 
     # --- Reject complex C constructs ---
-    if re.search(r'[\*&\->\[\]]', expr_str): return None
+    #if re.search(r'[\*&\->\[\]]', expr_str): return None
+    if '->' in expr_str or re.search(r'[\*&\[\]]', expr_str):
+        return None
     if '.' in expr_str and not re.match(r'^-?\d+\.\d+(f|F)?$', expr_str): return None
 
     potential_func_call = re.search(r'\b[a-zA-Z_][a-zA-Z0-9_]+\s*\(', expr_str)
@@ -104,6 +92,8 @@ def format_value_expression(expr_str):
     # --- Clean C Syntax ---
     cleaned_expr = re.sub(r'\(\s*(?:const\s+)?(?:[a-zA-Z_]\w*)\s*\*?\s*\)', '', expr_str).strip()
     cleaned_expr = re.sub(r'\b([0-9a-fA-F]+)[uUlL]+\b', r'\1', cleaned_expr, flags=re.IGNORECASE).strip()
+    cleaned_expr = re.sub(r'\b(0[xX][0-9a-fA-F]+|\d+)[uUlL]+\b', r'\1', cleaned_expr, flags=re.IGNORECASE).strip()
+    cleaned_expr = re.sub(r'(?<=\d)[fF]\b', '', cleaned_expr)
 
     if not cleaned_expr: return None
 
@@ -301,8 +291,9 @@ def generate_python_code(all_data, base_enums_dict):
             if safe_name not in consolidated_defines:
                 consolidated_defines[safe_name] = (val, rel_path)
                 all_define_names.add(safe_name)
-
+    """
     # Generate Defines Output
+    # This is kinda fucked NGL
     last_rel_path_def = None
     define_count = 0
     skipped_define_count = 0
@@ -334,7 +325,7 @@ def generate_python_code(all_data, base_enums_dict):
             skipped_define_count += 1
 
     print(f"Generated {define_count} unique defines, skipped {skipped_define_count}.")
-
+    """
     # --- Enums ---
     output_lines.append("\n\n# --- Enums Extracted from Source ---")
     consolidated_enums = {}

@@ -490,6 +490,8 @@ class connMSP():
 
         if 'INAV' in self.board.CONFIG['flightControllerIdentifier']:
             self.board.INAV = True
+        else:
+            self.board.INAV = False
 
         basic_info_cmd_list = [
             inavutil.msp.MSP_FC_VERSION, 
@@ -584,6 +586,10 @@ class connMSP():
         while (flags):
             bitpos = ffs(flags) - 1
             flags &= ~(1 << bitpos)
+            #if self.INAV:
+            #    result.append(self.armingDisableFlagNames_INAV.get(bitpos, ""))
+            #else:
+            #    result.append(self.armingDisableFlagNames_BF.get(bitpos, ""))
             result.append(bitpos)
         return result
 
@@ -874,7 +880,7 @@ class MSPy:
         self.port_read_lock = RLock()
         self.port_write_lock = Lock()
 
-        self.INAV = True #changed from False to True!
+        self.INAV = False #actually yeah i want betaflight eventually
 
         self.last_write = time.time()
         self.total_sent = 0

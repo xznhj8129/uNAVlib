@@ -1,0 +1,6 @@
+asyncio>=3.4.3
+pyserial
+simple-pid
+geographiclib
+mgrs
+geojson

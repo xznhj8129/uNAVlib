@@ -1,6 +1,5 @@
 import sys
 from setuptools import setup, find_packages
-from unavlib import __version__
 
 if sys.version_info < (3, 10):
     sys.exit('Sorry, Python < 3.10 is not supported.')
@@ -11,7 +10,7 @@ with open("README.md", "r") as fh:
 setup(
     name="unavlib",
     packages=[package for package in find_packages()],
-    version=__version__,
+    version="0.1.2",
     license="GPL",
     description="MultiWii Serial Protocol autonomous flight SDK for INAV",
     long_description=long_description,

@@ -7,8 +7,6 @@ import serial
 from select import select
 from ..modules.utils import inavutil
 
-# WHY DO THESE SUCK SO MUCH
-
 class fastMSP():
     def __init__(self,mspy_instance):
         self.mspy = mspy_instance

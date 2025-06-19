@@ -43,7 +43,7 @@ class UAVControl:
         # ----- INITIAL SET-UP -----------------------------------------
         self.debugprint = False
         self.gps_enabled = GPS
-        self.msp_receiver = True if receiver=="msp" else False
+        self.msp_receiver = receiver.lower()=="msp"
         self.loop_time = 1.0 / 250  # Hz
         self.mspy_min_time_between_writes = 1.0 / 100
         self.rc_interval = 1.0 / 20           # Hz
@@ -136,7 +136,7 @@ class UAVControl:
         self.channels[3] = self.defval
         self.modes = {}
         self.active_modes = []
-        self.supermodes = {}
+        self.supermodes = {}  #       
         self.active_supermodes = []
         self.pids = {}
         self.msp_override_active = False
@@ -322,6 +322,7 @@ class UAVControl:
     # ------------------------------------------------------------------ #
     # SUPERMODES                                                         #
     # ------------------------------------------------------------------ #
+    # this shouldn't be part of this but an user thing
     def new_supermode(self, name: str, modes: list):
         for m in modes:
             if m not in self.modes:
